@@ -26,16 +26,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - uses: dorny/paths-filter@v2
-        id: changes
-        with:
-          filters: |
-            src:
-              - 'backend/**'
-              - 'tools/openshift/**'
-          base: ${{ github.ref}}
       - name: Build changes
-        if: steps.changes.outputs.src == 'true'
         working-directory: './tools'
         run: |
           oc login --token="$AUTH_TOKEN" --server="$CLUSTER"
