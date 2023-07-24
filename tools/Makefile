@@ -19,6 +19,8 @@ export UI_PUBLIC_KEY := $(or $(UI_PUBLIC_KEY), None)
 export LAST_COMMIT := $(shell git log -1 --oneline --decorate=full --no-color --format="%h, %cn, %f, %D" | sed 's/->/:/')
 export COMMIT_SHA:=$(shell git rev-parse --short=7 HEAD)
 
+export REPO_NAME:=ECC-IOSAS-D365
+
 define BUILD_TAG
 "$(BUILD_REF)-$(COMMIT_SHA)"
 endef
@@ -76,38 +78,24 @@ print-status:
 	@echo " | HOST NAME: 	$(HOST) "
 	@echo " +---------------------------------------------------------+ "
 
-init-project:
-	@echo "Run initial set-up for the project, including network security\n" 
-	@oc -n $(NAMESPACE) process -f openshift/networkpolicy.yml -p NAMESPACE=$(NAMESPACE) | oc -n $(NAMESPACE) apply -f -
-	@oc -n $(BUILD_NAMESPACE) policy add-role-to-group system:image-puller system:serviceaccounts:$(NAMESPACE)
 
-build-patroni:
-	@oc -n $(BUILD_NAMESPACE) process -f $(BUILD_TEMPLATE_PATH)  -p NAME=patroni -p TAG="12-latest" -p BASE_IMAGE_NAME=postgres -p BASE_IMAGE_TAG="12" -p SOURCE_REPOSITORY_URL="https://github.com/BCDevOps/platform-services.git" -p SOURCE_REPOSITORY_REF="master" -p SOURCE_CONTEXT_DIR="apps/pgsql/patroni/docker" | oc -n $(BUILD_NAMESPACE) apply -f -
-	@oc -n $(BUILD_NAMESPACE) start-build bc/patroni --wait
+
+api-create-certificate:
+	@echo "\n++ Creating service certificate ++\n"
+	@openssl genpkey -algorithm RSA -out certificates/server.key
+	@openssl req -new -key certificates/server.key -out certificates/server.csr
+	@openssl x509 -req -days 365 -in certificates/server.csr -signkey certificates/server.key -out certificates/server.crt
+
+
 
 init-api:
 	@echo "++\n Init Api in $(NAMESPACE) \n++"
-	test -n $(SOAM_DISCOVERY)
-	test -n $(SOAM_CLIENT_ID)
-	test -n $(SOAM_CLIENT_SECRET)
-	@oc -n $(NAMESPACE) process -f openshift/api-pre-req.yml \
-		-p SOAM_DISCOVERY=$(SOAM_DISCOVERY) \
-		-p SOAM_CLIENT_ID=$(SOAM_CLIENT_ID) \
-		-p SOAM_CLIENT_SECRET=$(SOAM_CLIENT_SECRET) | oc -n $(NAMESPACE) apply -f -
+	@oc -n $(NAMESPACE) create configmap $(API)-$(HOST_PREFIX)-config --from-file=appsettings.json
 
 init-api-sec:
-	@echo "++\n Init Api in $(NAMESPACE) \n++"
-	@oc -n $(NAMESPACE) create secret generic iosas-ui-sec  --from-file=private-key=certificates/tempPenBackendkey \
-		--from-file=certificate=certificates/tempPenBackendKey.pub.key
+	@echo "++\n Init tls certificate secret in $(NAMESPACE) \n++"
+	@oc -n $(NAMESPACE) create secret tls $(API)-$(HOST_PREFIX)-tls --cert=certificates/server.crt --key=certificates/server.key
 
-init-web:
-	@echo "++\n Init Api in $(NAMESPACE) \n++"
-	oc create -n $(NAMESPACE) configmap iosas-ui-config \
-	--from-literal=TZ="America/Vancouver" \
-	--from-literal=HOST_ROUTE="$(HOST)" \
-	--from-literal=config.js="$regConfig" \
-	--from-literal=snowplow.js="$snowplow" \
-	--dry-run=client -o yaml | oc apply -f -
 
 
 init-artifactory-secret-credential:
@@ -145,10 +133,9 @@ update-dc-api:
 	@echo "+\n++ Updating API-dc with tag: $(BUILD_TAG)\n+"
 	@oc -n $(NAMESPACE) process -f openshift/api-deploy.yml \
 		-p NAME=$(API) \
-		-p HOST_NAME=$(HOST) \
+		-p PREFIX=$(HOST_PREFIX) \
 		-p BUILD_NAMESPACE=$(BUILD_NAMESPACE) \
 		-p IMAGE_STREAM_TAG="$(API):$(HOST_PREFIX)" \
-		-p VERSION="$(LAST_COMMIT)" \
 		-p BUILD_ID=$(BUILD_TAG) | oc -n $(NAMESPACE) apply -f -
 
 deploy-api: update-dc-api
@@ -160,23 +147,4 @@ promote-api:
 	@echo "+\n++ API: Deploying latest tag $(BUILD_TAG) API with ENV $(HOST_PREFIX) $\n+"
 	@oc -n "$(BUILD_NAMESPACE)" tag $(API):$(BUILD_TAG) $(API):$(HOST_PREFIX)
 
-update-dc-web:
-	test -n "$(NAMESPACE)"
-	test -n "$(BUILD_NAMESPACE)"
-	@echo "+\n++ Updating Web-dc with tag: $(BUILD_TAG)\n+"
-	@oc -n $(NAMESPACE) process -f openshift/web-deploy.yml \
-		-p NAME=$(Web) \
-		-p HOST_NAME=$(HOST) \
-		-p BUILD_NAMESPACE=$(BUILD_NAMESPACE) \
-		-p IMAGE_STREAM_TAG="$(Web):$(HOST_PREFIX)" \
-		-p BUILD_ID=$(BUILD_TAG) | oc -n $(NAMESPACE) apply -f -
-
-deploy-web: update-dc-web
-	$(call rollout_and_wait,dc/$(Web))
-
-promote-web:
-	test -n "$(NAMESPACE)"
-	test -n "$(BUILD_NAMESPACE)"
-	@echo "+\n++ Web: Deploying latest tag $(BUILD_TAG) API with ENV $(HOST_PREFIX) $\n+"
-	@oc -n "$(BUILD_NAMESPACE)" tag $(Web):$(BUILD_TAG) $(Web):$(HOST_PREFIX)
 

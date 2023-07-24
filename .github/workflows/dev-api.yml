@@ -1,0 +1,45 @@
+# Build and Deploy to dev env.
+# Trigger with tag dev
+# Connected with repo environment 'dev'
+name: OpenShift Build and Deploy to api
+
+on:
+  push:
+    branches:
+      - main-dev
+    tags:
+      - dev
+
+env:
+  CLUSTER: https://api.silver.devops.gov.bc.ca:6443
+  AUTH_TOKEN: ${{ secrets.AUTH_TOKEN_OCP4 }}
+  BUILD_REF:  ${{ github.base_ref }}
+
+jobs:
+  api:
+    name: OpenShift Build & Deploy
+    runs-on: ubuntu-latest
+    concurrency: ci-build-api
+    timeout-minutes: 20
+    env:
+      HOST_PREFIX: dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            src:
+              - 'backend/**'
+              - 'tools/openshift/**'
+          base: ${{ github.ref}}
+      - name: Build changes
+        if: steps.changes.outputs.src == 'true'
+        working-directory: './tools'
+        run: |
+          oc login --token="$AUTH_TOKEN" --server="$CLUSTER"
+          make print-status
+          make build-api
+          make promote-api
+          make update-dc-api
