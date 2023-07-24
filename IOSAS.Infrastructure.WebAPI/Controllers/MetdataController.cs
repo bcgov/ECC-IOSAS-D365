@@ -83,6 +83,34 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                     $"Failed to Retrieve records: {response.ReasonPhrase}");
         }
 
+        [HttpGet("GetMetadataDefinition")]
+        public ActionResult<string> GetMetadataDefinition(string tableName)
+        {
+            if (string.IsNullOrEmpty(tableName))
+                return BadRequest("Invalid Request - tableName is required");
+
+            string message = string.Format($"EntityDefinitions(LogicalName='{tableName}')?$select=LogicalName&$expand=Attributes");
+
+            var response = _d365webapiservice.SendMessageAsync(HttpMethod.Get, message);
+            if (response.IsSuccessStatusCode)
+            {
+                var root = JToken.Parse(response.Content.ReadAsStringAsync().Result);
+
+                if (root.Last().HasValues)
+                {
+                    return Ok(response.Content.ReadAsStringAsync().Result);
+                }
+                else
+                {
+                    return NotFound($"No Data");
+                }
+            }
+            else
+                return StatusCode((int)response.StatusCode,
+                    $"Failed to Retrieve records: {response.ReasonPhrase}");
+        }
+   
+
 
         private string GenerateUri(string tableName, string fieldName, string fieldType, string query)
         {

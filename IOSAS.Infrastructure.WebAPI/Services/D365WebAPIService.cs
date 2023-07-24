@@ -1,6 +1,7 @@
 ﻿using IOSAS.Infrastructure.WebAPI.Services;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -56,6 +57,7 @@ namespace IOSAS.Infrastructure.WebAPI.Services
         public HttpResponseMessage SendUpdateRequestAsync(string endPoint, string body)
         {
             var message = new HttpRequestMessage(HttpMethod.Patch, endPoint);
+            message.Headers.Add("Match", "*");
             message.Content = new StringContent(body, Encoding.UTF8, "application/json");
 
             var client = _authenticationService.GetHttpClient().Result;
