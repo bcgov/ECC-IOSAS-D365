@@ -22,7 +22,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
         }
 
         // GET: api/contact
-        [HttpGet]
+        [HttpGet("GetbyExternalId")]
         public ActionResult<string> Get(string externalId)
         {
             if (string.IsNullOrEmpty(externalId)) 
