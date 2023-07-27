@@ -20,7 +20,6 @@
     <Compile Remove="Controllers\ChangeActionDocumentController.cs" />
     <Compile Remove="Controllers\ContractFilesController.cs" />
     <Compile Remove="Controllers\CustomActionController.cs" />
-    <Compile Remove="Controllers\DocumentController.cs" />
     <Compile Remove="Controllers\EnvironmentInformationController.cs" />
     <Compile Remove="Controllers\FacilityController.cs" />
     <Compile Remove="Controllers\HealthController.cs" />

@@ -19,17 +19,17 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddTransient<ID365AuthenticationService, AuthenticationServiceMSAL>();
 builder.Services.AddTransient<ID365WebAPIService, D365WebAPIService>();
-builder.Services.AddScoped<D365AuthSettings>();
+builder.Services.AddScoped<D365AppSettings>();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    app.UseDeveloperExceptionPage();
-}
+//if (app.Environment.IsDevelopment())
+//{
+app.UseSwagger();
+app.UseSwaggerUI();
+app.UseDeveloperExceptionPage();
+//}
 
 app.UseHttpsRedirection();
 

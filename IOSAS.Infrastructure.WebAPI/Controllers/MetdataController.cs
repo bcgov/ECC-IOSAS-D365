@@ -29,17 +29,44 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
         }
 
 
-        [HttpGet("GetPickListValues")]
-        public ActionResult<string> GetPickListValues(string tableName, string fieldName)
+        //[HttpGet("GetFieldPickListValues")]
+        //public ActionResult<string> GetFieldPickListValues(string tableName, string fieldName)
+        //{
+        //    if (string.IsNullOrEmpty(tableName))
+        //        return BadRequest("Invalid Request - tableName is required");
+
+        //    if (string.IsNullOrEmpty(fieldName))
+        //        return BadRequest("Invalid Request - fieldName is required");
+
+        //    var message = GenerateUri(tableName, fieldName, "PicklistAttributeMetadata", "?$select=SchemaName&$expand=OptionSet,GlobalOptionSet");
+
+        //    var response = _d365webapiservice.SendMessageAsync(HttpMethod.Get, message);
+        //    if (response.IsSuccessStatusCode)
+        //    {
+        //        var root = JToken.Parse(response.Content.ReadAsStringAsync().Result);
+
+        //        if (root.Last().First().HasValues)
+        //        {
+        //            return Ok(response.Content.ReadAsStringAsync().Result);
+        //        }
+        //        else
+        //        {
+        //            return NotFound($"No Data");
+        //        }
+        //    }
+        //    else
+        //        return StatusCode((int)response.StatusCode,
+        //            $"Failed to Retrieve records: {response.ReasonPhrase}");
+        //}
+
+
+        [HttpGet("GetMultiSelectPicklistValues")]
+        public ActionResult<string> GetMultiSelectPicklistValues(string tableName)
         {
             if (string.IsNullOrEmpty(tableName))
                 return BadRequest("Invalid Request - tableName is required");
 
-            if (string.IsNullOrEmpty(fieldName))
-                return BadRequest("Invalid Request - fieldName is required");
-
-            var message = GenerateUri(tableName, fieldName, "PicklistAttributeMetadata", "?$select=SchemaName&$expand=OptionSet,GlobalOptionSet");
-
+            string message = $"EntityDefinitions(LogicalName='{tableName}')/Attributes/Microsoft.Dynamics.CRM.MultiSelectPicklistAttributeMetadata?$select=LogicalName&$expand=GlobalOptionSet($select=Options)";
             var response = _d365webapiservice.SendMessageAsync(HttpMethod.Get, message);
             if (response.IsSuccessStatusCode)
             {
@@ -59,9 +86,8 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                     $"Failed to Retrieve records: {response.ReasonPhrase}");
         }
 
-
-        [HttpGet("GetAllPickListValues")]
-        public ActionResult<string> GetAllPickListValues(string tableName)
+        [HttpGet("GetPickListValues")]
+        public ActionResult<string> GetPickListValues(string tableName)
         {
             if (string.IsNullOrEmpty(tableName))
                 return BadRequest("Invalid Request - tableName is required");

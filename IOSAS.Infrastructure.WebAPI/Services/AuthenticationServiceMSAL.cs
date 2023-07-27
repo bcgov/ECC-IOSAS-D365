@@ -13,26 +13,28 @@ namespace IOSAS.Infrastructure.WebAPI.Services
     public class AuthenticationServiceMSAL : ID365AuthenticationService
     {
         private readonly IConfiguration _configuration;
-        private readonly D365AuthSettings _authSettings;
+        private readonly D365AppSettings _appSettings;
+
+        public D365AppSettings D365AppSettings { get { return _appSettings; } }
 
         public AuthenticationServiceMSAL(IConfiguration configuration)
         {
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
-            var authSettingsSection = _configuration.GetSection("DynamicsAuthenticationSettings");
-            _authSettings = authSettingsSection.Get<D365AuthSettings>();
+            var authSettingsSection = _configuration.GetSection("D365AppSettings");
+            _appSettings = authSettingsSection.Get<D365AppSettings>();
         } 
 
         public async Task<HttpClient> GetHttpClient()
         {
             // Get the access token that is required for authentication.
-            var accessToken = await GetAccessToken(_authSettings.BaseUrl,
-                                                    _authSettings.ClientId,
-                                                    _authSettings.ClientSecret,
-                                                    _authSettings.TenantId);
+            var accessToken = await GetAccessToken(_appSettings.BaseUrl,
+                                                    _appSettings.ClientId,
+                                                    _appSettings.ClientSecret,
+                                                    _appSettings.TenantId);
             HttpClient client = new()
             {
-                BaseAddress = new Uri(_authSettings.WebApiUrl),
+                BaseAddress = new Uri(_appSettings.WebApiUrl),
                 Timeout = new TimeSpan(0, 2, 0)  // 2 minutes
             };
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
@@ -43,12 +45,12 @@ namespace IOSAS.Infrastructure.WebAPI.Services
         public async Task<HttpClient> GetHttpClient(bool isSearch = false)
         {
             // Get the access token that is required for authentication.
-            var accessToken = await GetAccessToken(_authSettings.BaseUrl,
-                                                    _authSettings.ClientId,
-                                                    _authSettings.ClientSecret,
-                                                    _authSettings.TenantId);
+            var accessToken = await GetAccessToken(_appSettings.BaseUrl,
+                                                    _appSettings.ClientId,
+                                                    _appSettings.ClientSecret,
+                                                    _appSettings.TenantId);
 
-            var endpoint = isSearch ? $"{_authSettings.BaseUrl}api/search/{_authSettings.SearchVersion}/query" : _authSettings.WebApiUrl;
+            var endpoint = isSearch ? $"{_appSettings.BaseUrl}api/search/{_appSettings.SearchVersion}/query" : _appSettings.WebApiUrl;
 
             HttpClient client = new()
             {

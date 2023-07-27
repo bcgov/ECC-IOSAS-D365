@@ -1,4 +1,5 @@
-﻿using IOSAS.Infrastructure.WebAPI.Services;
+﻿using IOSAS.Infrastructure.WebAPI.Models;
+using IOSAS.Infrastructure.WebAPI.Services;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
@@ -21,12 +22,14 @@ namespace IOSAS.Infrastructure.WebAPI.Services
         HttpResponseMessage SendUpdateRequestAsync(string endPoint, string content);
         HttpResponseMessage SendMessageAsync(HttpMethod httpMethod, string messageUri);
         HttpResponseMessage SendSearchRequestAsync(string body);
+        public ID365AuthenticationService D365AuthenticationService { get; }
     }
 
     public class D365WebAPIService : ID365WebAPIService
     {
         private readonly ID365AuthenticationService _authenticationService;
 
+        public ID365AuthenticationService D365AuthenticationService { get { return _authenticationService; } }
         public D365WebAPIService(ID365AuthenticationService authenticationService)
         {
             _authenticationService = authenticationService ?? throw new ArgumentNullException(nameof(authenticationService));

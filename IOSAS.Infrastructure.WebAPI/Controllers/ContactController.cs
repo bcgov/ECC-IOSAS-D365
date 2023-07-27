@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using IOSAS.Infrastructure.WebAPI.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -29,28 +30,27 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 return BadRequest("Invalid Request - BCeID or Invite Code is required.");
 
             var fetchXml = $@"<fetch version='1.0' output-format='xml-platform' mapping='logical' no-lock='false' distinct='true'>
-    <entity name='contact'>
-        <attribute name='entityimage_url' />
-        <attribute name='fullname' />
-        <attribute name='emailaddress1' />
-        <attribute name='contactid' />
-        <attribute name='firstname' />
-        <attribute name='lastname' />
-        <attribute name='telephone1' />
-        <attribute name='iosas_loginenabled' />
-        <attribute name='iosas_externaluserid' />
-        <attribute name='iosas_invitecode' />
-        <attribute name='contactid' />
-        <filter type='and'>
-            <condition attribute='statecode' operator='eq' value='0' />
-            <filter type='or'>
-                <condition attribute='iosas_invitecode' operator='eq' value='{externalId}' />
-                <condition attribute='iosas_externaluserid' operator='eq' value='{externalId}' />
-            </filter>
-        </filter>
-        <order attribute='fullname' descending='false' />
-    </entity>
-</fetch>";
+                                    <entity name='contact'>
+                                        <attribute name='entityimage_url' />
+                                        <attribute name='fullname' />
+                                        <attribute name='emailaddress1' />
+                                        <attribute name='contactid' />
+                                        <attribute name='firstname' />
+                                        <attribute name='lastname' />
+                                        <attribute name='telephone1' />
+                                        <attribute name='iosas_loginenabled' />
+                                        <attribute name='iosas_externaluserid' />
+                                        <attribute name='iosas_invitecode' />
+                                        <filter type='and'>
+                                            <condition attribute='statecode' operator='eq' value='0' />
+                                            <filter type='or'>
+                                                <condition attribute='iosas_invitecode' operator='eq' value='{externalId}' />
+                                                <condition attribute='iosas_externaluserid' operator='eq' value='{externalId}' />
+                                            </filter>
+                                        </filter>
+                                        <order attribute='fullname' descending='false' />
+                                    </entity>
+                                </fetch>";
 
             var message = $"contacts?fetchXml=" + WebUtility.UrlEncode(fetchXml);
 
@@ -145,6 +145,81 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             else
                 return StatusCode((int)response.StatusCode,
                     $"Failed to Update record: {response.ReasonPhrase}");
+        }
+
+
+        [HttpPost("Login")]
+        public ActionResult<string> Login([FromBody] dynamic value)
+        {
+
+            //Validate fields from body and check if user is existing or new
+            //Create if does not exist and send external I dback to user.
+            //Returning crm contactid.
+            //throw new NotImplementedException();
+
+            if (value.iosas_externaluserid == null)
+                return BadRequest("iosas_externaluserid is not provided");
+
+            if (value.emailaddress1 == null)
+                return BadRequest("emailaddress1 is not provided");
+
+            if (value.firstname == null)
+                return BadRequest("firstname is not provided");
+
+            if (value.lastname == null)
+                return BadRequest("lastname is not provided");
+
+            if (value.telephone1 == null)
+                return BadRequest("telephone1 is not provided");
+
+
+            var fetchXml = $@"<fetch version='1.0' output-format='xml-platform' mapping='logical' no-lock='false' distinct='true'>
+                                <entity name='contact'>
+                                    <attribute name='fullname' />
+                                    <attribute name='emailaddress1' />
+                                    <attribute name='contactid' />
+                                    <attribute name='firstname' />
+                                    <attribute name='lastname' />
+                                    <attribute name='telephone1' />
+                                    <attribute name='iosas_loginenabled' />
+                                    <attribute name='iosas_externaluserid' />     
+                                    <filter type='and'>
+                                        <condition attribute='statecode' operator='eq' value='0' />
+                                        <filter type='or'>
+                                            <condition attribute='iosas_externaluserid' operator='eq' value='{value.iosas_externaluserid}' />
+                                        </filter>
+                                    </filter>
+                                    <order attribute='fullname' descending='false' />
+                                </entity>
+                            </fetch>";
+
+            var message = $"contacts?fetchXml=" + WebUtility.UrlEncode(fetchXml);
+            var exists = _d365webapiservice.SendMessageAsync(HttpMethod.Get, message);
+
+            if (exists.IsSuccessStatusCode)
+            {
+                var root = JToken.Parse(exists.Content.ReadAsStringAsync().Result);
+
+                if (root.Last().First().HasValues)
+                {
+                    return Ok(exists.Content.ReadAsStringAsync().Result);
+                }
+                else
+                {
+                    string statement = "contacts?$select=fullname,emailaddress1,contactid,firstname,lastname,telephone1,iosas_loginenabled,iosas_externaluserid";
+                    var createResponse = _d365webapiservice.SendCreateRequestAsyncRtn(statement, value.ToString());
+
+                    if (createResponse.IsSuccessStatusCode)
+                    {
+                        return Ok(createResponse.Content.ReadAsStringAsync().Result);
+                    }
+                    else
+                        return StatusCode((int)exists.StatusCode, $"Failed to create user: {exists.ReasonPhrase}");
+                }
+            }
+            else
+                return StatusCode((int)exists.StatusCode,
+                    $"Failed to retrieve user details: {exists.ReasonPhrase}");
         }
 
 
