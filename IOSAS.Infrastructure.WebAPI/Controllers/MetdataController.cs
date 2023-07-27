@@ -5,11 +5,14 @@ using System.Linq;
 using System.Net;
 using System.Security.Policy;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using IOSAS.Infrastructure.WebAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.VisualBasic.FileIO;
 using Microsoft.Xrm.Sdk.Metadata;
 using Newtonsoft.Json.Linq;
 
@@ -37,6 +40,33 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
 
             var message = GenerateUri(tableName, fieldName, "PicklistAttributeMetadata", "?$select=SchemaName&$expand=OptionSet,GlobalOptionSet");
 
+            var response = _d365webapiservice.SendMessageAsync(HttpMethod.Get, message);
+            if (response.IsSuccessStatusCode)
+            {
+                var root = JToken.Parse(response.Content.ReadAsStringAsync().Result);
+
+                if (root.Last().First().HasValues)
+                {
+                    return Ok(response.Content.ReadAsStringAsync().Result);
+                }
+                else
+                {
+                    return NotFound($"No Data");
+                }
+            }
+            else
+                return StatusCode((int)response.StatusCode,
+                    $"Failed to Retrieve records: {response.ReasonPhrase}");
+        }
+
+
+        [HttpGet("GetAllPickListValues")]
+        public ActionResult<string> GetAllPickListValues(string tableName)
+        {
+            if (string.IsNullOrEmpty(tableName))
+                return BadRequest("Invalid Request - tableName is required");
+
+            string message = $"EntityDefinitions(LogicalName='{tableName}')/Attributes/Microsoft.Dynamics.CRM.PicklistAttributeMetadata?$select=LogicalName&$expand=GlobalOptionSet($select=Options)";
             var response = _d365webapiservice.SendMessageAsync(HttpMethod.Get, message);
             if (response.IsSuccessStatusCode)
             {
