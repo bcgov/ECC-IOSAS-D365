@@ -13,16 +13,16 @@ USER appuser
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0-focal AS build
 WORKDIR /
-COPY ["CCOF.Infrastructure.WebAPI/CCOF.Infrastructure.WebAPI.csproj", "CCOF.Infrastructure.WebAPI/"]
-RUN dotnet restore "CCOF.Infrastructure.WebAPI/CCOF.Infrastructure.WebAPI.csproj"
+COPY ["IOSAS.Infrastructure.WebAPI/IOSAS.Infrastructure.WebAPI.csproj", "IOSAS.Infrastructure.WebAPI/"]
+RUN dotnet restore "IOSAS.Infrastructure.WebAPI/IOSAS.Infrastructure.WebAPI.csproj"
 COPY . .
-WORKDIR "/CCOF.Infrastructure.WebAPI"
-RUN dotnet build "CCOF.Infrastructure.WebAPI.csproj" -c Release -o /app/build
+WORKDIR "/IOSAS.Infrastructure.WebAPI"
+RUN dotnet build "IOSAS.Infrastructure.WebAPI.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "CCOF.Infrastructure.WebAPI.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "IOSAS.Infrastructure.WebAPI.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "CCOF.Infrastructure.WebAPI.dll"]
+ENTRYPOINT ["dotnet", "IOSAS.Infrastructure.WebAPI.dll"]
