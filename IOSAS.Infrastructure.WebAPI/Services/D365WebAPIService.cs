@@ -1,5 +1,6 @@
 ﻿using IOSAS.Infrastructure.WebAPI.Models;
 using IOSAS.Infrastructure.WebAPI.Services;
+using Microsoft.Xrm.Sdk;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
@@ -7,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -20,6 +22,8 @@ namespace IOSAS.Infrastructure.WebAPI.Services
         HttpResponseMessage SendCreateRequestAsync(HttpMethod httpMethod, string entitySetName, string body);
         HttpResponseMessage SendDeleteRequestAsync(string endPoint);
         HttpResponseMessage SendUpdateRequestAsync(string endPoint, string content);
+
+        HttpResponseMessage SendUploadFileRequestAsync(string endPoint, Stream fileContent);
         HttpResponseMessage SendMessageAsync(HttpMethod httpMethod, string messageUri);
         HttpResponseMessage SendSearchRequestAsync(string body);
         public ID365AuthenticationService D365AuthenticationService { get; }
@@ -65,6 +69,40 @@ namespace IOSAS.Infrastructure.WebAPI.Services
 
             var client = _authenticationService.GetHttpClient().Result;
             return client.SendAsync(message).Result;
+        }
+
+        public HttpResponseMessage SendUploadFileRequestAsync(string endPoint, Stream fileContent)
+        {
+
+            //if (fileColumnMaxSizeInKb.HasValue && (fileContent.Length / 1024) > fileColumnMaxSizeInKb.Value)
+            //{
+            //    throw new Exception($"The file is too large to be uploaded to this column.");
+            //}
+
+            //var message = new HttpRequestMessage(HttpMethod.Patch, endPoint);
+            //message.Headers.Add("Match", "*");
+
+            //HttpContent? content = new StreamContent(fileContent);
+            //content.Headers.Add("Content-Type", "application/octet-stream");
+            //content.Headers.Add("x-ms-file-name", fileName);
+            //string length = fileContent.Length.ToString();
+            //content.Headers.Add("Content-Length", length);
+            //message.Content = content;
+
+            //var client = _authenticationService.GetHttpClient().Result;
+            //return client.SendAsync(message).Result;
+
+
+            var message = new HttpRequestMessage(HttpMethod.Patch, endPoint);
+            message.Headers.Add("Match", "*");
+
+            HttpContent? content = new StreamContent(fileContent);
+            content.Headers.Add("Content-Type", "application/octet-stream");
+            message.Content = content;
+
+            var client = _authenticationService.GetHttpClient().Result;
+            return client.SendAsync(message).Result;
+
         }
 
         public HttpResponseMessage SendDeleteRequestAsync(string endPoint)

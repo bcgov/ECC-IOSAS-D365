@@ -118,7 +118,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             if (string.IsNullOrEmpty(tableName))
                 return BadRequest("Invalid Request - tableName is required");
 
-           string message = string.Format($"EntityDefinitions(LogicalName='{tableName}')?$select=LogicalName&$expand=Attributes($select=LogicalName,Description)");
+           string message = string.Format($"EntityDefinitions(LogicalName='{tableName}')?$select=LogicalName&$expand=Attributes($select=LogicalName,DisplayName,Description)");
 
            var response = _d365webapiservice.SendMessageAsync(HttpMethod.Get, message);
             if (response.IsSuccessStatusCode)

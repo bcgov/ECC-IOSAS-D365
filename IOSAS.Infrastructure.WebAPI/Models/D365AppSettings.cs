@@ -16,7 +16,6 @@ namespace IOSAS.Infrastructure.WebAPI.Models
         public string RedirectUrl { get; set; } = string.Empty;
         public string APIVersion { get; set; } = string.Empty;
         public string SearchVersion { get; set; } = "v1.0";
-        public string AllowedFileUplaodTypes { get; set; } = "jpg,jpeg,pdf,png,doc,docx,heic,xls,xlsx";
-        public double MaxFileUploadSize { get; set; } = 5;
+        public string AllowedFileUplaodTypes { get; set; } = "jpg,jpeg,pdf,png,doc,docx,heic,xls,xlsx"; 
     }
 }
