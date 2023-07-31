@@ -14,7 +14,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
     [ApiController]
     public class HealthController : ControllerBase
     {
-        // GET: api/Health
+        // GET: api/Health to check availability of the API
         [HttpGet]
         public ActionResult Get()
         {
