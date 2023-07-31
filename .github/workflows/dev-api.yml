@@ -33,4 +33,4 @@ jobs:
           make print-status
           make build-api
           make promote-api
-          make update-dc-api
+          make deploy-api
