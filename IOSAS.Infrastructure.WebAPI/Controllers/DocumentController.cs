@@ -21,8 +21,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 
-//TODO: this will bechnaged to use File field in Document Entity
-
 namespace IOSAS.Infrastructure.WebAPI.Controllers
 {
     [Route("api/[controller]")]
@@ -155,9 +153,27 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
         {
             if (string.IsNullOrEmpty(id)) return BadRequest("Invalid Request");
 
-            var fetchXml = $@"";
+            var fetchXml = $@"<fetch>
+  <entity name='iosas_document'>
+    <attribute name='createdby' />
+    <attribute name='createdon' />
+    <attribute name='iosas_documentid' />
+    <attribute name='iosas_newschoolapplicationdocumenttype' />
+    <attribute name='iosas_documentcategory' />
+    <attribute name='iosas_file' />
+    <attribute name='iosas_name' />
+    <attribute name='iosas_regardingid' />
+    <attribute name='modifiedby' />
+    <attribute name='modifiedon' />
+    <attribute name='statecode' />
+    <attribute name='statuscode' />
+    <filter>
+      <condition attribute='iosas_regardingid' operator='eq' value='{id}' />
+    </filter>
+  </entity>
+</fetch>";
 
-            var message = $"contact?fetchXml=" + WebUtility.UrlEncode(fetchXml);
+            var message = $"iosas_document?fetchXml=" + WebUtility.UrlEncode(fetchXml);
             var response = _d365webapiservice.SendMessageAsync(HttpMethod.Get, message);
             if (response.IsSuccessStatusCode)
             {
@@ -183,9 +199,26 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
         {
             if (string.IsNullOrEmpty(id)) return BadRequest("Invalid Request");
 
-            var fetchXml = $@"";
+            var fetchXml = $@"<fetch>
+  <entity name='iosas_document'>
+    <attribute name='createdby' />
+    <attribute name='createdon' />
+    <attribute name='iosas_documentid' />
+    <attribute name='iosas_eoidocumenttype' />
+    <attribute name='iosas_file' />
+    <attribute name='iosas_name' />
+    <attribute name='iosas_regardingid' />
+    <attribute name='modifiedby' />
+    <attribute name='modifiedon' />
+    <attribute name='statecode' />
+    <attribute name='statuscode' />
+    <filter>
+      <condition attribute='iosas_regardingid' operator='eq' value='{id}' />
+    </filter>
+  </entity>
+</fetch>";
 
-            var message = $"contact?fetchXml=" + WebUtility.UrlEncode(fetchXml);
+            var message = $"iosas_document?fetchXml=" + WebUtility.UrlEncode(fetchXml);
             var response = _d365webapiservice.SendMessageAsync(HttpMethod.Get, message);
             if (response.IsSuccessStatusCode)
             {
