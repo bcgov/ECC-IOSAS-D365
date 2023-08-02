@@ -90,6 +90,7 @@ api-create-certificate:
 
 init-api:
 	@echo "++\n Init Api in $(NAMESPACE) \n++"
+	@oc -n $(NAMESPACE) delete configmap $(API)-$(HOST_PREFIX)-config || true
 	@oc -n $(NAMESPACE) create configmap $(API)-$(HOST_PREFIX)-config --from-file=appsettings.json
 
 init-api-sec:
