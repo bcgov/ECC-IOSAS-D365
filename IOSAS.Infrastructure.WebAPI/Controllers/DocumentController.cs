@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using System.Net;
@@ -173,7 +174,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
   </entity>
 </fetch>";
 
-            var message = $"iosas_document?fetchXml=" + WebUtility.UrlEncode(fetchXml);
+            var message = $"iosas_documents?fetchXml=" + WebUtility.UrlEncode(fetchXml);
             var response = _d365webapiservice.SendMessageAsync(HttpMethod.Get, message);
             if (response.IsSuccessStatusCode)
             {
@@ -218,7 +219,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
   </entity>
 </fetch>";
 
-            var message = $"iosas_document?fetchXml=" + WebUtility.UrlEncode(fetchXml);
+            var message = $"iosas_documents?fetchXml=" + WebUtility.UrlEncode(fetchXml);
             var response = _d365webapiservice.SendMessageAsync(HttpMethod.Get, message);
             if (response.IsSuccessStatusCode)
             {
@@ -238,32 +239,14 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                     $"Failed to Retrieve records: {response.ReasonPhrase}");
         }
 
-        private long GetFileColumnMaxSizeInKb(string tableName, string fieldName)
+        private int GetFileColumnMaxSizeInKb(string tableName, string fieldName)
         {
-            //RetrieveAttributeRequest retrieveAttributeRequest = new(
-            //    regarding: regarding,
-            //    logicalName: fileColumnLogicalName,
-            //    type: AttributeType.FileAttributeMetadata, query: "?$select=MaxSizeInKB");
+            var defaultSize = 32 * 1024;
 
-            //try
-            //{
-            //    var retrieveAttributeResponse =
-            //    await service.SendAsync<RetrieveAttributeResponse<FileAttributeMetadata>>(retrieveAttributeRequest);
+            string message = new($"EntityDefinitions(LogicalName='{tableName}')" +
+                                  $"/Attributes(LogicalName='{fieldName}')" +
+                                  $"/Microsoft.Dynamics.CRM.FileAttributeMetadata?$select=MaxSizeInKB");
 
-            //    return retrieveAttributeResponse.AttributeMetadata.MaxSizeInKB;
-            //}
-            //catch (Exception)
-            //{
-            //    throw;
-            //}
-
-            //_d365webapiservice.SendRetrieveRequestAsync($"")
-
-            //string baseUri = new($"EntityDefinitions(LogicalName='{tableName}')" +
-            //                      $"/Attributes(LogicalName='{fieldName}')" +
-            //                      $"/Microsoft.Dynamics.CRM.{fieldType}");
-
-            string message = $"EntityDefinitions(LogicalName='{tableName}')/Attributes(LogicalName='{fieldName}')?$select=MaxSizeInKB";
             var response = _d365webapiservice.SendMessageAsync(HttpMethod.Get, message);
             if (response.IsSuccessStatusCode)
             {
@@ -271,17 +254,15 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
 
                 if (root.Last().HasValues)
                 {
-                    //return Ok(response.Content.ReadAsStringAsync().Result);
-                    return long.Parse(response.Content.ReadAsStringAsync().Result);
+                    return root["MaxSizeInKB"] == null ? defaultSize : (int)root["MaxSizeInKB"];
                 }
                 else
                 {
-                    //return NotFound($"No Data");
-                    return 32 * 1024;
+                    return defaultSize;
                 }
             }
             else
-              return 32 * 1024;
+                return defaultSize;
 
         }
     }
