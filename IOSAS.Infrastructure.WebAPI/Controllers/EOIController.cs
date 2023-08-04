@@ -70,6 +70,9 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='iosas_schoolauthoritycontactname' />
                                     <attribute name='iosas_schoolauthoritycontactemail' />
                                     <attribute name='iosas_schoolauthoritycontactphone' />
+                                    <attribute name='iosas_reviewstatus' />
+                                    <attribute name='iosas_submissiondate' />
+                                    <attribute name='iosas_approvaldate' />
                                     <attribute name='createdon' />
                                     <attribute name='modifiedon' />
                                     <attribute name='statecode' />
@@ -108,6 +111,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
         [HttpGet("GetAllByUser")]
         public ActionResult<string> GetAllByUser(string userId)
         {
+
             if (string.IsNullOrEmpty(userId))
                 return BadRequest("Invalid Request - userId is userId");
 
@@ -146,12 +150,17 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='iosas_schoolauthoritycontactname' />
                                     <attribute name='iosas_schoolauthoritycontactemail' />
                                     <attribute name='iosas_schoolauthoritycontactphone' />
+                                    <attribute name='iosas_reviewstatus' />
+                                    <attribute name='iosas_submissiondate' />
+                                    <attribute name='iosas_approvaldate' />
                                     <attribute name='createdon' />
                                     <attribute name='modifiedon' />
                                     <attribute name='statecode' />
                                     <attribute name='statuscode' />
                                     <filter type='and'>
                                        <condition attribute='statecode' operator='eq' value='0'/>
+                                       <condition attribute='iosas_reviewstatus' operator='ne' value='100000005' />
+                                       <condition attribute='iosas_reviewstatus' operator='ne' value='100000004' />
                                        <filter type='or'>
                                            <condition attribute='iosas_authorityhead' operator='eq' value='{userId}' />
                                            <condition attribute='iosas_authortiycontact' operator='eq' value='{userId}' />
@@ -173,7 +182,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 }
                 else
                 {
-                    return NotFound($"No Data");
+                    return Ok($"[]");
                 }
             }
             else
@@ -181,14 +190,31 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                     $"Failed to Retrieve records: {response.ReasonPhrase}");
         }
 
+        [HttpPatch("Cancel")]
+        public ActionResult<string> Cancel(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+                return BadRequest("Invalid Request - Id is required");
+
+            var value = new JObject
+                        { 
+                            { "iosas_reviewstatus", 100000005}, 
+                            { "iosas_reviewnotes", "Abandoned by user" }
+                        };
+
+            var statement = $"iosas_expressionofinterests({id})";
+            HttpResponseMessage response = _d365webapiservice.SendUpdateRequestAsync(statement, value.ToString());
+            if (response.IsSuccessStatusCode)
+                return Ok($"EPO {id} Cancelled.");
+            else
+                return StatusCode((int)response.StatusCode,
+                    $"Failed to Update record: {response.ReasonPhrase}");
+        }
 
         [HttpPatch("Update")]
-        public ActionResult<string> Update([FromBody] dynamic value, string id, string? userId = null)
+        public ActionResult<string> Update([FromBody] dynamic value, bool submitted, string id, string? userId = null)
         {
-            //TODO:
-            //Update only allowed for authenticated users
-            //JSON contains feild values similar to create
-            //How do we handle Existing Authority Update.  No need to worry about DC or school year, they wont be changed from the Portal.
+
             if (string.IsNullOrEmpty(id))
                 return BadRequest("Invalid Request - Id is required");
 
@@ -208,7 +234,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 }
             }
 
-            var eoi = PrepareEOI(value, userId);
+            var eoi = PrepareEOI(value,submitted, userId);
 
             response = _d365webapiservice.SendUpdateRequestAsync(statement, eoi.ToString());
 
@@ -222,7 +248,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
         }
 
         [HttpPost("Create")]
-        public ActionResult<string> Create([FromBody] dynamic value, string? userId = null)
+        public ActionResult<string> Create([FromBody] dynamic value, bool submitted, string? userId = null)
         {
             string statement = "iosas_expressionofinterests";
 
@@ -232,7 +258,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             //If SA is the same as DC then use then id supplied otherwise jisut use EOI fields for SA Head
             //https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/create-entity-web-api
 
-            var eoi = PrepareEOI(value, userId);
+            var eoi = PrepareEOI(value,submitted, userId);
 
             var response = _d365webapiservice.SendCreateRequestAsync(statement, eoi.ToString());
 
@@ -257,7 +283,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
         }
     
     
-        private JObject PrepareEOI([FromBody] dynamic value, string? userId = null)
+        private JObject PrepareEOI([FromBody] dynamic value, bool submitted, string? userId = null)
         {
             var eoi = new JObject
                         {
@@ -276,8 +302,19 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                             { "iosas_seekgrouponeclassification", value.iosas_seekgrouponeclassification},
                             { "iosas_edu_Year@odata.bind", $"/edu_years({value._iosas_edu_year_value})" },
                             { "iosas_designatedcontactsameasauthorityhead",value.iosas_designatedcontactsameasauthorityhead },
-                            { "iosas_existingauthority",value.iosas_existingauthority }
+                            { "iosas_existingauthority",value.iosas_existingauthority },
+                            { "iosas_submissionmethod",100000001 }
                         };
+
+            if (submitted)
+            {
+                eoi["iosas_reviewstatus"] = 100000003; //New (sbumitted)
+                eoi["iosas_submissiondate"] = DateTime.UtcNow;
+            }
+            else
+            {
+                eoi["iosas_reviewstatus"] = 100000006; //Draft
+            }
 
             if (value.iosas_existingauthority == true)
             {

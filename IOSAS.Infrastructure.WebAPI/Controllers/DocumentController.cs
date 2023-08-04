@@ -186,7 +186,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 }
                 else
                 {
-                    return NotFound($"No Data: {id}");
+                    return Ok($"[]");
                 }
             }
             else
@@ -231,7 +231,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 }
                 else
                 {
-                    return NotFound($"No Data: {id}");
+                    return Ok($"[]");
                 }
             }
             else

@@ -74,25 +74,6 @@ namespace IOSAS.Infrastructure.WebAPI.Services
         public HttpResponseMessage SendUploadFileRequestAsync(string endPoint, Stream fileContent)
         {
 
-            //if (fileColumnMaxSizeInKb.HasValue && (fileContent.Length / 1024) > fileColumnMaxSizeInKb.Value)
-            //{
-            //    throw new Exception($"The file is too large to be uploaded to this column.");
-            //}
-
-            //var message = new HttpRequestMessage(HttpMethod.Patch, endPoint);
-            //message.Headers.Add("Match", "*");
-
-            //HttpContent? content = new StreamContent(fileContent);
-            //content.Headers.Add("Content-Type", "application/octet-stream");
-            //content.Headers.Add("x-ms-file-name", fileName);
-            //string length = fileContent.Length.ToString();
-            //content.Headers.Add("Content-Length", length);
-            //message.Content = content;
-
-            //var client = _authenticationService.GetHttpClient().Result;
-            //return client.SendAsync(message).Result;
-
-
             var message = new HttpRequestMessage(HttpMethod.Patch, endPoint);
             message.Headers.Add("Match", "*");
 
@@ -122,8 +103,11 @@ namespace IOSAS.Infrastructure.WebAPI.Services
 
         public HttpResponseMessage SendMessageAsync(HttpMethod httpMethod, string messageUri)
         {
-            var client = _authenticationService.GetHttpClient().Result;
+
             HttpRequestMessage message = new(httpMethod, messageUri);
+            message.Headers.Add("Prefer", "odata.include-annotations=OData.Community.Display.V1.FormattedValue");
+            var client = _authenticationService.GetHttpClient().Result;
+           
 
             // Send the message to the WebAPI. 
             return client.SendAsync(message).Result;

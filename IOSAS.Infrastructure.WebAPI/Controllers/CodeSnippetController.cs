@@ -56,7 +56,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 }
                 else
                 {
-                    return NotFound($"No Data");
+                    return Ok($"[]");
                 }
             }
             else

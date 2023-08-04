@@ -141,7 +141,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             HttpResponseMessage response = _d365webapiservice.SendUpdateRequestAsync(statement, value.ToString());
 
             if (response.IsSuccessStatusCode)
-                return Ok($"{value.ToString()}");
+                return Ok($"Contact {externalId} login updated.");
             else
                 return StatusCode((int)response.StatusCode,
                     $"Failed to Update record: {response.ReasonPhrase}");
