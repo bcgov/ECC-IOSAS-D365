@@ -34,33 +34,15 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 "<filter type='and'><condition attribute='statecode' operator='eq' value='0'/></filter>" :
                 $"<filter type='and'><condition attribute='statecode' operator='eq' value='0'/><condition attribute='edu_name' operator='like' value='%{authorityName}%'/></filter>";
 
+            //TODO: add Id field and remove additional fields
 
             var fetchXml = $@"<fetch version='1.0' mapping='logical' distinct='true'>
                                 <entity name='edu_schoolauthority'>
                                     <attribute name='edu_name'/>
-                                    <order attribute='edu_name' descending='false'/>
-                                    <attribute name='edu_name'/>
-                                    <attribute name='edu_authority_no'/> 
-                                    <attribute name='edu_authority_type'/>
-                                    <attribute name='edu_opendate'/>
-                                    <attribute name='edu_closedate'/>
-                                    <attribute name='edu_incorporationtype'/>
-                                    <attribute name='edu_incorporationdate'/>
-                                    <attribute name='edu_incorporationnumber'/>
-                                    <attribute name='edu_lastannualfiledate'/>
-                                    <attribute name='edu_schoolcount'/>
-                                    <attribute name='edu_societygoodstanding'/>
-                                    <attribute name='edu_umbrellagroupid'/>
-                                    <attribute name='edu_privateactname'/>
-                                    <attribute name='edu_suppliernumber'/>
+                                    <attribute name='edu_schoolauthorityid'/>
                                     <attribute name='edu_vendorlocationcode'/>
                                     <attribute name='edu_fax'/>
                                     <attribute name='edu_email'/>
-                                    <attribute name='iosas_maincontact'/>
-                                    <attribute name='iosas_prefix'/>
-                                    <attribute name='iosas_firstname'/>
-                                    <attribute name='iosas_middlename'/>
-                                    <attribute name='iosas_lastname'/>
                                     <attribute name='edu_address_street1'/>
                                     <attribute name='edu_address_street2'/>
                                     <attribute name='edu_address_city'/>
@@ -68,6 +50,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='edu_address_country'/>
                                     <attribute name='edu_address_postalcode'/>
                                      {conditions}
+                                    <order attribute='edu_name' descending='false'/>
                                 </entity>
                             </fetch>";
 

@@ -83,10 +83,9 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='edu_startdate'/>
                                     <attribute name='edu_enddate'/>
                                     <attribute name='edu_yearid'/>
-                                    <attribute name='iosas_label'/>
-                                    <filter type='or'>
-                                        <condition attribute='statuscode' operator='eq' value='757500000'/>
-                                        <condition attribute='statuscode' operator='eq' value='1'/>
+                                    <attribute name='iosas_label'/> 
+                                    <filter type='and'>
+                                       <condition attribute='statecode' operator='eq' value='0'/>
                                     </filter>
                                 </entity>
                             </fetch>";
@@ -104,7 +103,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 }
                 else
                 {
-                    return NotFound($"No Data");
+                    return Ok($"[]");
                 }
             }
             else
