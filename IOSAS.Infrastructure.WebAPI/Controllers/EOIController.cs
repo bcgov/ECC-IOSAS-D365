@@ -77,6 +77,8 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='modifiedon' />
                                     <attribute name='statecode' />
                                     <attribute name='statuscode' />
+                                    <attribute name='iosas_eoinumber' />
+                                    <attribute name='iosas_expressionofinterestid' />
                                     <filter type='and'>
                                         <condition attribute='iosas_expressionofinterestid' operator='eq' value='{id}' />
                                         <filter type='or'>
@@ -157,6 +159,8 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='modifiedon' />
                                     <attribute name='statecode' />
                                     <attribute name='statuscode' />
+                                    <attribute name='iosas_eoinumber' />
+                                    <attribute name='iosas_expressionofinterestid' />
                                     <filter type='and'>
                                        <condition attribute='statecode' operator='eq' value='0'/>
                                        <condition attribute='iosas_reviewstatus' operator='ne' value='100000005' />
