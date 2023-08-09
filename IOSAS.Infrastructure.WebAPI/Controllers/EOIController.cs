@@ -219,7 +219,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 return BadRequest("Invalid Request - Id is required");
 
             if (string.IsNullOrEmpty(userId))
-                return BadRequest("Invalid Request - userId is userId");
+                return BadRequest("Invalid Request - UserId is required");
 
 
             string statement = $"iosas_expressionofinterests({id})";
@@ -283,7 +283,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
         }
     
     
-        private JObject PrepareEOI([FromBody] dynamic value, bool submitted, string? userId = null)
+        private JObject PrepareEOI(dynamic value, bool submitted, string? userId = null)
         {
             var eoi = new JObject
                         {
