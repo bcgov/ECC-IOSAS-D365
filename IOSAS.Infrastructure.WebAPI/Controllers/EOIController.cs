@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
 using System.Security.Policy;
 using System.Text.RegularExpressions;
@@ -79,6 +80,10 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='statuscode' />
                                     <attribute name='iosas_eoinumber' />
                                     <attribute name='iosas_expressionofinterestid' />
+                                    <attribute name='iosas_seekgrouponeclassification' />  
+                                    <attribute name='iosas_incorporationcertificateissuedate' />  
+                                    <attribute name='iosas_certificateofgoodstandingissuedate' /> 
+                                    <attribute name='iosas_notes' /> 
                                     <filter type='and'>
                                         <condition attribute='iosas_expressionofinterestid' operator='eq' value='{id}' />
                                         <filter type='or'>
@@ -161,6 +166,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='statuscode' />
                                     <attribute name='iosas_eoinumber' />
                                     <attribute name='iosas_expressionofinterestid' />
+                                    <attribute name='iosas_seekgrouponeclassification' />  
                                     <filter type='and'>
                                        <condition attribute='statecode' operator='eq' value='0'/>
                                        <condition attribute='iosas_reviewstatus' operator='ne' value='100000005' />
@@ -293,6 +299,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                         {
                             { "iosas_name", "TBA"},
                             { "iosas_schooladdressline1", value.iosas_schooladdressline1},
+                            { "iosas_schooladdressline2", value.iosas_schooladdressline2},
                             { "iosas_authoritycountry", value.iosas_authoritycountry},
                             { "iosas_proposedschoolname", value.iosas_proposedschoolname},
                             { "iosas_schoolcity", value.iosas_schoolcity},
@@ -307,7 +314,10 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                             { "iosas_edu_Year@odata.bind", $"/edu_years({value._iosas_edu_year_value})" },
                             { "iosas_designatedcontactsameasauthorityhead",value.iosas_designatedcontactsameasauthorityhead },
                             { "iosas_existingauthority",value.iosas_existingauthority },
-                            { "iosas_submissionmethod",100000001 }
+                            { "iosas_submissionmethod",100000001 },
+                            { "iosas_incorporationcertificateissuedate",value.iosas_incorporationcertificateissuedate },
+                            { "iosas_certificateofgoodstandingissuedate",value.iosas_certificateofgoodstandingissuedate },
+                            { "iosas_notes",value.iosas_notes }
                         };
 
             if (submitted)
