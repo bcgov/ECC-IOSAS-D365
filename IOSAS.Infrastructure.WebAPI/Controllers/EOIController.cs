@@ -77,6 +77,8 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='modifiedon' />
                                     <attribute name='statecode' />
                                     <attribute name='statuscode' />
+                                    <attribute name='iosas_eoinumber' />
+                                    <attribute name='iosas_expressionofinterestid' />
                                     <filter type='and'>
                                         <condition attribute='iosas_expressionofinterestid' operator='eq' value='{id}' />
                                         <filter type='or'>
@@ -157,6 +159,8 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='modifiedon' />
                                     <attribute name='statecode' />
                                     <attribute name='statuscode' />
+                                    <attribute name='iosas_eoinumber' />
+                                    <attribute name='iosas_expressionofinterestid' />
                                     <filter type='and'>
                                        <condition attribute='statecode' operator='eq' value='0'/>
                                        <condition attribute='iosas_reviewstatus' operator='ne' value='100000005' />
@@ -219,7 +223,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 return BadRequest("Invalid Request - Id is required");
 
             if (string.IsNullOrEmpty(userId))
-                return BadRequest("Invalid Request - userId is userId");
+                return BadRequest("Invalid Request - UserId is required");
 
 
             string statement = $"iosas_expressionofinterests({id})";
@@ -283,7 +287,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
         }
     
     
-        private JObject PrepareEOI([FromBody] dynamic value, bool submitted, string? userId = null)
+        private JObject PrepareEOI(dynamic value, bool submitted, string? userId = null)
         {
             var eoi = new JObject
                         {

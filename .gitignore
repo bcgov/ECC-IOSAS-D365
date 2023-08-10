@@ -421,3 +421,4 @@ FodyWeavers.xsd
 /.vs/CCOF/DesignTimeBuild/.dtbcache.v2
 /CCOF.Application.WebResources/Scripts/FormHandler/JavaScript.js
 /IOSAS.Infrastructure.WebAPI.Test
+/IOSAS.Infrastructure.WebAPI/appsettings.json
