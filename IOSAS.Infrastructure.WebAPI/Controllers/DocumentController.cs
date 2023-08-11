@@ -42,16 +42,17 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             var rawDocument = document.ToString();
             Document doc = JsonConvert.DeserializeObject<Document>(rawDocument);
 
-            if (doc.Content == null)
+            if (doc.Content == null )
                 return BadRequest("Content is not provided");
+
+            if (doc.DocumentType == null || !doc.DocumentType.HasValue)
+                return BadRequest("DocumentType is not provided");
 
             if (doc.DocumentName == null)
                 return BadRequest("DocumentName is not provided");
 
-
             if (doc.FileName == null)
                 return BadRequest("FileName is not provided");
-
 
             if (doc.RegardingId == null)
                 return BadRequest("RegardingId is not provided");
@@ -78,10 +79,10 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 return StatusCode((int)HttpStatusCode.InternalServerError, $"Uploaded file format is not supported, valif formats are: {_d365webapiservice.D365AuthenticationService.D365AppSettings.AllowedFileUplaodTypes}.");
             }
 
-            long? fileColumnMaxSizeInKb = GetFileColumnMaxSizeInKb("iosas_document", "iosas_file");
-            if (doc.Content.Length > fileColumnMaxSizeInKb)
+            long? maxFileSize = GetMaxFileSize("iosas_document", "iosas_file");
+            if (doc.Content.Length > maxFileSize)
             {
-                return StatusCode((int)HttpStatusCode.InternalServerError, $"The file size exceeds the limit allowed ({fileColumnMaxSizeInKb}).");
+                return StatusCode((int)HttpStatusCode.InternalServerError, $"The file size exceeds the limit allowed ({maxFileSize}).");
             }
 
             //Create Document Record
@@ -116,10 +117,10 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
 
                     var bytes = Convert.FromBase64String(doc.Content);
                     var content = new MemoryStream(bytes);
-                    var response = _d365webapiservice.SendUploadFileRequestAsync($"iosas_documents({id})/iosas_file?x-ms-file-name={doc.FileName})", content);
+                    var response = _d365webapiservice.SendUploadFileRequestAsync($"iosas_documents({id})/iosas_file?x-ms-file-name={doc.FileName}", content);
                     if (createResp.IsSuccessStatusCode)
                     {
-                        return Ok("The document uploaded successfully");
+                        return Ok("The document uploaded successfully.");
                     }
                     else
                         return StatusCode((int)createResp.StatusCode,
@@ -239,9 +240,9 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                     $"Failed to Retrieve records: {response.ReasonPhrase}");
         }
 
-        private int GetFileColumnMaxSizeInKb(string tableName, string fieldName)
+        private int GetMaxFileSize(string tableName, string fieldName)
         {
-            var defaultSize = 32 * 1024;
+            var result = 32 * 1024* 1024;
 
             string message = new($"EntityDefinitions(LogicalName='{tableName}')" +
                                   $"/Attributes(LogicalName='{fieldName}')" +
@@ -254,16 +255,11 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
 
                 if (root.Last().HasValues)
                 {
-                    return root["MaxSizeInKB"] == null ? defaultSize : (int)root["MaxSizeInKB"];
+                    result = root["MaxSizeInKB"] == null ? result : (int)root["MaxSizeInKB"]*1024;
                 }
-                else
-                {
-                    return defaultSize;
-                }
+                
             }
-            else
-                return defaultSize;
-
+           return result;
         }
     }
 }

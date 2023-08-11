@@ -32,10 +32,13 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
         {
             var conditions = string.IsNullOrEmpty(authorityName) ? 
                 "<filter type='and'><condition attribute='statecode' operator='eq' value='0'/></filter>" :
-                $"<filter type='and'><condition attribute='statecode' operator='eq' value='0'/><condition attribute='edu_name' operator='like' value='%{authorityName}%'/></filter>";
+                $"<filter type='and'>" +
+                $"<condition attribute='statecode' operator='eq' value='0'/>" +
+                $"<condition attribute='edu_authority_type' operator='eq' value='757500000'/>" +
+                $"<condition attribute='edu_name' operator='like' value='%{authorityName}%'/>" +
+                $"</filter>";
 
-            //TODO: add Id field and remove additional fields
-
+     
             var fetchXml = $@"<fetch version='1.0' mapping='logical' distinct='true'>
                                 <entity name='edu_schoolauthority'>
                                     <attribute name='edu_name'/>
