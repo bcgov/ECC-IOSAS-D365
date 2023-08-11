@@ -7,8 +7,10 @@ on:
   push:
     branches:
       - main-dev
+      - dev
     tags:
       - dev
+  workflow_dispatch:
 
 env:
   CLUSTER: https://api.silver.devops.gov.bc.ca:6443
