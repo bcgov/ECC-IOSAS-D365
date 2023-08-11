@@ -73,6 +73,7 @@ print-status:
 	@echo " | NAMESPACE:    			$(NAMESPACE)"
 	@echo " | BUILD_NAMESPACE:    $(BUILD_NAMESPACE)"
 	@echo " +---------------------------------------------------------+ "
+	@echo " | ENV: 				$(HOST_PREFIX) "
 	@echo " | BUILD_ID: 	$(COMMIT_SHA) "
 	@echo " | BUILD_TAG: 	$(BUILD_TAG) "
 	@echo " | HOST NAME: 	$(HOST) "
