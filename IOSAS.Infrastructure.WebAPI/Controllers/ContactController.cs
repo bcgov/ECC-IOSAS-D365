@@ -2,13 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics.X86;
+using System.Security.Policy;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Transactions;
+using System.Xml.Linq;
 using IOSAS.Infrastructure.WebAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
 
 namespace IOSAS.Infrastructure.WebAPI.Controllers
 {
@@ -26,7 +33,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
         [HttpGet("GetbyExternalId")]
         public ActionResult<string> Get(string externalId)
         {
-            if (string.IsNullOrEmpty(externalId)) 
+            if (string.IsNullOrEmpty(externalId))
                 return BadRequest("Invalid Request - BCeID or Invite Code is required.");
 
             var fetchXml = $@"<fetch version='1.0' output-format='xml-platform' mapping='logical' no-lock='false' distinct='true'>
@@ -58,9 +65,9 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             if (response.IsSuccessStatusCode)
             {
                 var root = JToken.Parse(response.Content.ReadAsStringAsync().Result);
-               
+
                 if (root.Last().First().HasValues)
-                {     
+                {
                     return Ok(response.Content.ReadAsStringAsync().Result);
                 }
                 else
@@ -79,7 +86,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
         [HttpGet("GetBySchoolAuthority")]
         public ActionResult<string> GetBySchoolAuthority(string schoolAuthorityId)
         {
-            if (string.IsNullOrEmpty(schoolAuthorityId)) 
+            if (string.IsNullOrEmpty(schoolAuthorityId))
                 return BadRequest("Invalid Request");
 
             var fetchXml = $@"<fetch version='1.0' output-format='xml-platform' mapping='logical' no-lock='false' distinct='true'>
@@ -153,7 +160,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
         {
 
             //Validate fields from body and check if user is existing or new
-            //Create if does not exist and send external I dback to user.
+            //Create if does not exist and send external Id back to user.
             //Returning crm contactid.
             //throw new NotImplementedException();
 
@@ -196,13 +203,24 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             var message = $"contacts?fetchXml=" + WebUtility.UrlEncode(fetchXml);
             var exists = _d365webapiservice.SendMessageAsync(HttpMethod.Get, message);
 
+            int success = 100000000;
+            int activity = 100000000;
+
             if (exists.IsSuccessStatusCode)
             {
                 var root = JToken.Parse(exists.Content.ReadAsStringAsync().Result);
 
                 if (root.Last().First().HasValues)
                 {
-                    return Ok(exists.Content.ReadAsStringAsync().Result);
+                    
+                    string result = exists.Content.ReadAsStringAsync().Result;
+                    dynamic json = JsonConvert.DeserializeObject(result);
+                    string contactId = json.value[0].contactid.ToString();
+                    //Log activity
+                    Helper.LogUserActvity(success, activity,_d365webapiservice, contactId, value.firstname.ToString(), value.lastname.ToString());
+
+
+                    return Ok(result);
                 }
                 else
                 {
@@ -211,7 +229,13 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
 
                     if (createResponse.IsSuccessStatusCode)
                     {
-                        return Ok(createResponse.Content.ReadAsStringAsync().Result);
+                        //Log activity
+                        string result = createResponse.Content.ReadAsStringAsync().Result;
+                        dynamic json = JsonConvert.DeserializeObject(result);
+                        string contactId = json.contactid.ToString();
+
+                        Helper.LogUserActvity(success, activity,_d365webapiservice, contactId, value.firstname.ToString(), value.lastname.ToString());
+                        return Ok(result);
                     }
                     else
                         return StatusCode((int)exists.StatusCode, $"Failed to create user: {exists.ReasonPhrase}");
@@ -221,7 +245,6 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 return StatusCode((int)exists.StatusCode,
                     $"Failed to retrieve user details: {exists.ReasonPhrase}");
         }
-
 
     }
 }

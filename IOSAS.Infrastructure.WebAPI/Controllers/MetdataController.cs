@@ -29,35 +29,35 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
         }
 
 
-        //[HttpGet("GetFieldPickListValues")]
-        //public ActionResult<string> GetFieldPickListValues(string tableName, string fieldName)
-        //{
-        //    if (string.IsNullOrEmpty(tableName))
-        //        return BadRequest("Invalid Request - tableName is required");
+        [HttpGet("GetFieldPickListValues")]
+        public ActionResult<string> GetFieldPickListValues(string tableName, string fieldName)
+        {
+            if (string.IsNullOrEmpty(tableName))
+                return BadRequest("Invalid Request - tableName is required");
 
-        //    if (string.IsNullOrEmpty(fieldName))
-        //        return BadRequest("Invalid Request - fieldName is required");
+            if (string.IsNullOrEmpty(fieldName))
+                return BadRequest("Invalid Request - fieldName is required");
 
-        //    var message = GenerateUri(tableName, fieldName, "PicklistAttributeMetadata", "?$select=SchemaName&$expand=OptionSet,GlobalOptionSet");
+            var message = GenerateUri(tableName, fieldName, "PicklistAttributeMetadata", "?$select=SchemaName&$expand=OptionSet,GlobalOptionSet");
 
-        //    var response = _d365webapiservice.SendMessageAsync(HttpMethod.Get, message);
-        //    if (response.IsSuccessStatusCode)
-        //    {
-        //        var root = JToken.Parse(response.Content.ReadAsStringAsync().Result);
+            var response = _d365webapiservice.SendMessageAsync(HttpMethod.Get, message);
+            if (response.IsSuccessStatusCode)
+            {
+                var root = JToken.Parse(response.Content.ReadAsStringAsync().Result);
 
-        //        if (root.Last().First().HasValues)
-        //        {
-        //            return Ok(response.Content.ReadAsStringAsync().Result);
-        //        }
-        //        else
-        //        {
-        //            return NotFound($"No Data");
-        //        }
-        //    }
-        //    else
-        //        return StatusCode((int)response.StatusCode,
-        //            $"Failed to Retrieve records: {response.ReasonPhrase}");
-        //}
+                if (root.Last().First().HasValues)
+                {
+                    return Ok(response.Content.ReadAsStringAsync().Result);
+                }
+                else
+                {
+                    return NotFound($"No Data");
+                }
+            }
+            else
+                return StatusCode((int)response.StatusCode,
+                    $"Failed to Retrieve records: {response.ReasonPhrase}");
+        }
 
 
         [HttpGet("GetMultiSelectPicklistValues")]
