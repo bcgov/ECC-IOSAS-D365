@@ -46,6 +46,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='iosas_existingcontact' />  
                                     <attribute name='iosas_edu_year' />  
                                     <attribute name='iosas_proposedschoolname' />  
+                                    <attribute name='iosas_edu_schoolauthority' />
                                     <attribute name='iosas_schooladdressline1' />  
                                     <attribute name='iosas_schooladdressline2' />  
                                     <attribute name='iosas_schoolcity' />  
@@ -250,7 +251,12 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
 
             if (response.IsSuccessStatusCode)
             {
-               return Ok($"EOI {value.iosas_expressionofinterestid} updated successfully");
+                //log activity
+                int activity = submitted ? 100000002 : 100000001;
+                int success = 100000000;
+                Helper.LogUserActvity(success, activity, _d365webapiservice, userId);
+
+                return Ok($"EOI {value.iosas_expressionofinterestid} updated successfully");
             }
             else
                 return StatusCode((int)response.StatusCode,
@@ -282,6 +288,10 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 if (m.Success)
                 {
                     newRecordId = m.Value;
+                    //log activity
+                    int activity = submitted ? 100000002 : 100000001;
+                    int success = 100000000;
+                    Helper.LogUserActvity(success, activity, _d365webapiservice, userId);
                     return Ok($"{newRecordId}");
                 }
                 else
@@ -330,45 +340,39 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 eoi["iosas_reviewstatus"] = 100000006; //Draft
             }
 
+
+            eoi["iosas_schoolauthorityname"] = value.iosas_schoolauthorityname;
+            eoi["iosas_authorityaddressline1"] = value.iosas_authorityaddressline1;
+            eoi["iosas_authorityaddressline2"] = value.iosas_authorityaddressline2;
+            eoi["iosas_authoritycity"] = value.iosas_authoritycity;
+            eoi["iosas_authorityprovince"] = value.iosas_authorityprovince;
+            eoi["iosas_authoritypostalcode"] = value.iosas_authoritypostalcode;
+            eoi["iosas_authoritycountry"] = value.iosas_authoritycountry;
             if (value.iosas_existingauthority == true)
             {
                 eoi["iosas_edu_SchoolAuthority@odata.bind"] = $"/edu_schoolauthorities({value._iosas_edu_schoolauthority_value})";
 
             }
-            else
-            {
-                eoi["iosas_schoolauthorityname"] = value.iosas_schoolauthorityname;
-                eoi["iosas_authorityaddressline1"] = value.iosas_authorityaddressline1;
-                eoi["iosas_authorityaddressline2"] = value.iosas_authorityaddressline2;
-                eoi["iosas_authoritycity"] = value.iosas_authoritycity;
-                eoi["iosas_authorityprovince"] = value.iosas_authorityprovince;
-                eoi["iosas_authoritypostalcode"] = value.iosas_authoritypostalcode;
-                eoi["iosas_authoritycountry"] = value.iosas_authoritycountry;
-            }
 
-            if (string.IsNullOrEmpty(userId)) //unathenticated
+            eoi["iosas_authorityheadfirstname"] = value.iosas_authorityheadfirstname;
+            eoi["iosas_schoolauthorityheadname"] = value.iosas_schoolauthorityheadname;
+            eoi["iosas_schoolauthorityheademail"] = value.iosas_schoolauthorityheademail;
+            eoi["iosas_schoolauthorityheadphone"] = value.iosas_schoolauthorityheadphone;
+            if (value.iosas_designatedcontactsameasauthorityhead == true)
             {
-                eoi["iosas_authorityheadfirstname"] = value.iosas_authorityheadfirstname;
-                eoi["iosas_schoolauthorityheadname"] = value.iosas_schoolauthorityheadname;
-                eoi["iosas_schoolauthorityheademail"] = value.iosas_schoolauthorityheademail;
-                eoi["iosas_schoolauthorityheadphone"] = value.iosas_schoolauthorityheadphone;
-
-                if (value.iosas_designatedcontactsameasauthorityhead == true)
-                {
-                    eoi["iosas_designatedcontactfirstname"] = value.iosas_authorityheadfirstname;
-                    eoi["iosas_schoolauthoritycontactname"] = value.iosas_schoolauthorityheadname;
-                    eoi["iosas_schoolauthoritycontactemail"] = value.iosas_schoolauthorityheademail;
-                    eoi["iosas_schoolauthoritycontactphone"] = value.iosas_schoolauthorityheadphone;
-                }
-                else
-                {
-                    eoi["iosas_designatedcontactfirstname"] = value.iosas_designatedcontactfirstname;
-                    eoi["iosas_schoolauthoritycontactname"] = value.iosas_schoolauthoritycontactname;
-                    eoi["iosas_schoolauthoritycontactemail"] = value.iosas_schoolauthoritycontactemail;
-                    eoi["iosas_schoolauthoritycontactphone"] = value.iosas_schoolauthoritycontactphone;
-                }
+                eoi["iosas_designatedcontactfirstname"] = value.iosas_authorityheadfirstname;
+                eoi["iosas_schoolauthoritycontactname"] = value.iosas_schoolauthorityheadname;
+                eoi["iosas_schoolauthoritycontactemail"] = value.iosas_schoolauthorityheademail;
+                eoi["iosas_schoolauthoritycontactphone"] = value.iosas_schoolauthorityheadphone;
             }
             else
+            {
+                eoi["iosas_designatedcontactfirstname"] = value.iosas_designatedcontactfirstname;
+                eoi["iosas_schoolauthoritycontactname"] = value.iosas_schoolauthoritycontactname;
+                eoi["iosas_schoolauthoritycontactemail"] = value.iosas_schoolauthoritycontactemail;
+                eoi["iosas_schoolauthoritycontactphone"] = value.iosas_schoolauthoritycontactphone;
+            }
+            if (!string.IsNullOrEmpty(userId)) //authenticated
             {
                 //Designated contact
                 eoi["iosas_existingcontact"] = true;
@@ -377,14 +381,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 {
                     eoi["iosas_AuthorityHead@odata.bind"] = $"/contacts({userId})";
                     eoi["iosas_existinghead"] = true;
-                }
-                else
-                {
-                    eoi["iosas_authorityheadfirstname"] = value.iosas_authorityheadfirstname;
-                    eoi["iosas_schoolauthorityheadname"] = value.iosas_schoolauthorityheadname;
-                    eoi["iosas_schoolauthorityheademail"] = value.iosas_schoolauthorityheademail;
-                    eoi["iosas_schoolauthorityheadphone"] = value.iosas_schoolauthorityheadphone;
-                }
+                }               
             }
 
             return eoi;
