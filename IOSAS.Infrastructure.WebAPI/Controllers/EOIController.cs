@@ -13,6 +13,7 @@ using IOSAS.Infrastructure.WebAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace IOSAS.Infrastructure.WebAPI.Controllers
@@ -208,8 +209,8 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 return BadRequest("Invalid Request - Id is required");
 
             var value = new JObject
-                        { 
-                            { "iosas_reviewstatus", 100000005}, 
+                        {
+                            { "iosas_reviewstatus", 100000005},
                             { "iosas_reviewnotes", "Abandoned by user" }
                         };
 
@@ -238,14 +239,14 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             JObject body = JObject.Parse(response.Content.ReadAsStringAsync().Result);
             if (body != null)
             {
-                var  reviewId = body.GetValue("iosas_reviewstatus");
+                var reviewId = body.GetValue("iosas_reviewstatus");
                 if (int.Parse((string)reviewId) != 100000006)
                 {
                     return BadRequest($"EOI {value.iosas_name} not in draft mode.");
                 }
             }
 
-            var eoi = PrepareEOI(value,submitted, userId);
+            var eoi = PrepareEOI(value, submitted, userId);
 
             response = _d365webapiservice.SendUpdateRequestAsync(statement, eoi.ToString());
 
@@ -268,13 +269,12 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
         {
             string statement = "iosas_expressionofinterests";
 
-
             //Default status is Draft no need to set it at Creation Time
             //For Authority Head and Designated Contact: If logged in with user then use it designated Contact, otherwise set fields in EOI
             //If SA is the same as DC then use then id supplied otherwise jisut use EOI fields for SA Head
             //https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/create-entity-web-api
 
-            var eoi = PrepareEOI(value,submitted, userId);
+            var eoi = PrepareEOI(value, submitted, userId);
 
             var response = _d365webapiservice.SendCreateRequestAsync(statement, eoi.ToString());
 
@@ -287,6 +287,8 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 var newRecordId = string.Empty;
                 if (m.Success)
                 {
+                    UpdateContactPhoneNumber(value, userId);
+
                     newRecordId = m.Value;
                     //log activity
                     int activity = submitted ? 100000002 : 100000001;
@@ -301,8 +303,96 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 return StatusCode((int)response.StatusCode,
                     $"Failed to Create record: {response.ReasonPhrase}");
         }
-    
-    
+
+        private string UpdateContactPhoneNumber(dynamic value, string? userId = null)
+        {
+            if (value.ioas_schoolauthoritycontactphone == null)
+                return "Nothing to update";
+
+            if (value.iosas_schoolauthoritycontactemail == null && string.IsNullOrEmpty(userId))
+                return "iosas_schoolauthoritycontactemail or contactid is required";
+
+            string fetchXml = string.Empty;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                fetchXml = $@"<fetch version='1.0' output-format='xml-platform' mapping='logical' distinct='true' no-lock='false'>
+    <entity name='contact'>
+        <attribute name='entityimage_url' />
+        <attribute name='fullname' />
+        <attribute name='emailaddress1' />
+        <attribute name='contactid' />
+        <attribute name='firstname' />
+        <attribute name='lastname' />
+        <attribute name='telephone1' />
+        <attribute name='iosas_loginenabled' />
+        <attribute name='iosas_externaluserid' />
+        <attribute name='iosas_invitecode' />
+        <filter type='and'>
+            <condition attribute='contactid' operator='eq' value='{userId}'/>
+        </filter>
+    </entity>
+</fetch>";
+            }
+            else
+            {
+                fetchXml = $@"<fetch version='1.0' output-format='xml-platform' mapping='logical' distinct='true' no-lock='false'>
+    <entity name='contact'>
+        <attribute name='entityimage_url' />
+        <attribute name='fullname' />
+        <attribute name='emailaddress1' />
+        <attribute name='contactid' />
+        <attribute name='firstname' />
+        <attribute name='lastname' />
+        <attribute name='telephone1' />
+        <attribute name='iosas_loginenabled' />
+        <attribute name='iosas_externaluserid' />
+        <attribute name='iosas_invitecode' />
+        <filter type='and'>
+            <condition attribute='emailaddress1' operator='eq' value='{value.iosas_schoolauthoritycontactemail.ToString()}'/>
+        </filter>
+    </entity>
+</fetch>";
+            }
+
+
+            var message = $"contacts?fetchXml=" + WebUtility.UrlEncode(fetchXml);
+            var response = _d365webapiservice.SendMessageAsync(HttpMethod.Get, message);
+            if (response.IsSuccessStatusCode)
+            {
+                var root = JToken.Parse(response.Content.ReadAsStringAsync().Result);
+                if (root.Last().First().HasValues)
+                {
+                    dynamic json = JsonConvert.DeserializeObject(value: response.Content.ReadAsStringAsync().Result);
+                    string contactId = json.value[0].contactid.ToString();
+                    if (json.telephone1 == null)
+                    {
+                        //Update phone number
+                        var phone = new JObject
+                        {
+                            { "telephone1", value.ioas_schoolauthoritycontactphone}
+                        };
+
+                        var statement = $"contacts({contactId})";
+                        HttpResponseMessage updateResponse = _d365webapiservice.SendUpdateRequestAsync(statement, phone.ToString());
+                        if (updateResponse.IsSuccessStatusCode)
+                            return $"Contact {contactId} phone number updated.";
+                        else
+                            return $"Faile to update contact {contactId} phone number.";
+                    }
+                    else
+                    {
+                        return $"Contact {contactId} already exists.";
+                    }
+                }
+                else
+                {
+                    return $"No Data {userId}";
+                }
+            }
+            else
+                return $"Failed to retrieve designated contact details for {userId}";
+        }
+
         private JObject PrepareEOI(dynamic value, bool submitted, string? userId = null)
         {
             var eoi = new JObject
@@ -332,7 +422,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
 
             if (submitted)
             {
-                eoi["iosas_reviewstatus"] = 100000003; //New (sbumitted)
+                eoi["iosas_reviewstatus"] = 100000002; //In progress so that confirmation email is sent to the applicant
                 eoi["iosas_submissiondate"] = DateTime.UtcNow;
             }
             else
@@ -381,7 +471,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 {
                     eoi["iosas_AuthorityHead@odata.bind"] = $"/contacts({userId})";
                     eoi["iosas_existinghead"] = true;
-                }               
+                }
             }
 
             return eoi;
