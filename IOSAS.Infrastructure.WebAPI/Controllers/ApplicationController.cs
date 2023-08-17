@@ -203,6 +203,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='statuscode' />
                                     <attribute name='createdby' />
                                     <attribute name='modifiedby' />
+                                    <attribute name='iosas_portalapplicationstep' />
                                     <filter type='and'>
                                         <condition attribute='iosas_applicationid' operator='eq' value='{id}' />
                                         <filter type='or'>
@@ -400,11 +401,12 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='statuscode' />
                                     <attribute name='createdby' />
                                     <attribute name='modifiedby' />
+                                    <attribute name='iosas_portalapplicationstep' />
                                     <filter type='and'>
                                        <condition attribute='statecode' operator='eq' value='0'/>
                                        <filter type='or'>
-                                           <condition attribute='iosas_authorityhead' operator='eq' value='{userId}' />
-                                           <condition attribute='iosas_authortiycontact' operator='eq' value='{userId}' />
+                                           <condition attribute='iosas_schoolauthorityhead' operator='eq' value='{userId}' />
+                                           <condition attribute='iosas_designatedcontact' operator='eq' value='{userId}' />
                                         </filter>
                                     </filter>
                                 </entity>
@@ -470,7 +472,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 var statusId = body.GetValue("statuscode");
                 if (int.Parse((string)statusId) != 100000001)
                 {
-                    return BadRequest($"EOI {value.iosas_name} not in draft mode.");
+                    return BadRequest($"Application {value.iosas_name} not in draft mode.");
                 }
             }
 
