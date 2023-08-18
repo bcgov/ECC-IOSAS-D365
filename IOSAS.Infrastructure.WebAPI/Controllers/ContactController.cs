@@ -109,6 +109,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             int success = 100000000;
             int activity = 100000000;
 
+          
             if (exists.IsSuccessStatusCode)
             {
                 var root = JToken.Parse(exists.Content.ReadAsStringAsync().Result);
@@ -141,8 +142,8 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 }
                 else if (value.iosas_invitecode == null)  //If invite code is provided contact must already exist.  We don't create without invitation
                 {
-                    string statement = "contacts?$select=fullname,emailaddress1,contactid,firstname,lastname,telephone1,iosas_loginenabled,iosas_externaluserid,iosas_invitecode";
-                    var createResponse = _d365webapiservice.SendCreateRequestAsyncRtn(statement, value.ToString());
+                    string selectStatement = "contacts?$select=fullname,emailaddress1,contactid,firstname,lastname,telephone1,iosas_loginenabled,iosas_externaluserid,iosas_invitecode";
+                    var createResponse = _d365webapiservice.SendCreateRequestAsyncRtn(selectStatement, value.ToString());
 
                     if (createResponse.IsSuccessStatusCode)
                     {
@@ -164,60 +165,58 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 return StatusCode((int)exists.StatusCode, $"Failed to retrieve user details: {exists.ReasonPhrase}");
         }
 
-        //        // GET: api/contact
-        //        [HttpGet("GetbyExternalId")]
-        //        public ActionResult<string> Get(string externalId)
-        //        {
-        //            if (string.IsNullOrEmpty(externalId))
-        //                return BadRequest("Invalid Request - BCeID or Invite Code is required.");
+        // GET: api/contact
+        [HttpGet("GetbyExternalId")]
+        public ActionResult<string> Get(string externalId)
+        {
+            if (string.IsNullOrEmpty(externalId))
+                return BadRequest("Invalid Request - BCeID or Invite Code is required.");
 
-        //            // https://dev-ecc-iosas.apps.silver.devops.gov.bc.ca/school-application/app-1234?invitecode=guid
+            // https://dev-ecc-iosas.apps.silver.devops.gov.bc.ca/school-application/app-1234?invitecode=guid
 
-        //            var fetchXml = $@"<fetch version='1.0' output-format='xml-platform' mapping='logical' no-lock='false' distinct='true'>
-        //                                    <entity name='contact'>
-        //                                        <attribute name='entityimage_url' />
-        //                                        <attribute name='fullname' />
-        //                                        <attribute name='emailaddress1' />
-        //                                        <attribute name='contactid' />
-        //                                        <attribute name='firstname' />
-        //                                        <attribute name='lastname' />
-        //                                        <attribute name='telephone1' />
-        //                                        <attribute name='iosas_loginenabled' />
-        //                                        <attribute name='iosas_externaluserid' />
-        //                                        <attribute name='iosas_invitecode' />
-        //                                        <filter type='and'>
-        //                                            <condition attribute='statecode' operator='eq' value='0' />
-        //                                            <filter type='or'>
-        //                                                <condition attribute='iosas_invitecode' operator='eq' value='{externalId}' />
-        //                                                <condition attribute='iosas_externaluserid' operator='eq' value='{externalId}' />
-        //                                            </filter>
-        //                                        </filter>
-        //                                        <order attribute='fullname' descending='false' />
-        //                                    </entity>
-        //                                </fetch>";
+            var fetchXml = $@"<fetch version='1.0' output-format='xml-platform' mapping='logical' no-lock='false' distinct='true'>
+                                            <entity name='contact'>
+                                                <attribute name='entityimage_url' />
+                                                <attribute name='fullname' />
+                                                <attribute name='emailaddress1' />
+                                                <attribute name='contactid' />
+                                                <attribute name='firstname' />
+                                                <attribute name='lastname' />
+                                                <attribute name='telephone1' />
+                                                <attribute name='iosas_loginenabled' />
+                                                <attribute name='iosas_externaluserid' />
+                                                <attribute name='iosas_invitecode' />
+                                                <filter type='and'>
+                                                    <condition attribute='statecode' operator='eq' value='0' />
+                                                    <filter type='or'>
+                                                        <condition attribute='iosas_invitecode' operator='eq' value='{externalId}' />
+                                                        <condition attribute='iosas_externaluserid' operator='eq' value='{externalId}' />
+                                                        <condition attribute='emailaddress1' operator='eq' value='{externalId}' />
+                                                    </filter>
+                                                </filter>
+                                                <order attribute='fullname' descending='false' />
+                                            </entity>
+                                        </fetch>";
 
-        //            var message = $"contacts?fetchXml=" + WebUtility.UrlEncode(fetchXml);
+            var message = $"contacts?fetchXml=" + WebUtility.UrlEncode(fetchXml);
+            var response = _d365webapiservice.SendMessageAsync(HttpMethod.Get, message);
+            if (response.IsSuccessStatusCode)
+            {
+                var root = JToken.Parse(response.Content.ReadAsStringAsync().Result);
 
-        //            var response = _d365webapiservice.SendMessageAsync(HttpMethod.Get, message);
-        //            if (response.IsSuccessStatusCode)
-        //            {
-        //                var root = JToken.Parse(response.Content.ReadAsStringAsync().Result);
-
-        //                if (root.Last().First().HasValues)
-        //                {
-        //                    return Ok(response.Content.ReadAsStringAsync().Result);
-        //                }
-        //                else
-        //                {
-        //                    return NotFound($"No Data: {externalId}");
-        //                }
-        //            }
-        //            else
-        //                return StatusCode((int)response.StatusCode,
-        //                    $"Failed to Retrieve records: {response.ReasonPhrase}");
-
-
-        //        }
+                if (root.Last().First().HasValues)
+                {
+                    return Ok(response.Content.ReadAsStringAsync().Result);
+                }
+                else
+                {
+                    return NotFound($"No Data: {externalId}");
+                }
+            }
+            else
+                return StatusCode((int)response.StatusCode,
+                    $"Failed to Retrieve records: {response.ReasonPhrase}");
+        }
 
 
         //        [HttpGet("GetBySchoolAuthority")]
@@ -280,9 +279,9 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
         //                            { "iosas_invitecode", null}
         //                        };
 
-        //            var statement = $"contacts({id})";
+        //            var selectStatement = $"contacts({id})";
 
-        //            HttpResponseMessage response = _d365webapiservice.SendUpdateRequestAsync(statement, value.ToString());
+        //            HttpResponseMessage response = _d365webapiservice.SendUpdateRequestAsync(selectStatement, value.ToString());
 
         //            if (response.IsSuccessStatusCode)
         //                return Ok($"Contact {externalId} login updated.");

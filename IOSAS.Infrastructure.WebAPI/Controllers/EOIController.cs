@@ -287,9 +287,27 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 var newRecordId = string.Empty;
                 if (m.Success)
                 {
+                    newRecordId = m.Value;
+                    //update to trigger flow which sends confirmation email
+                    if (submitted)
+                    {
+                        var submitData = new JObject
+                        {
+                            { "iosas_reviewstatus", 100000002}, //Set to in progress
+                            { "iosas_submissiondate", DateTime.UtcNow}
+                        };
+                        var submitStatement = $"iosas_expressionofinterests({newRecordId})";
+
+                        HttpResponseMessage submitResp = _d365webapiservice.SendUpdateRequestAsync(submitStatement, submitData.ToString());
+                        if (!submitResp.IsSuccessStatusCode)
+                        {
+                            return StatusCode((int)submitResp.StatusCode, $"Failed to submit EOI: {submitResp.ReasonPhrase}");
+                        }
+                    }
+
                     UpdateContactPhoneNumber(value, userId);
 
-                    newRecordId = m.Value;
+                  
                     //log activity
                     int activity = submitted ? 100000002 : 100000001;
                     int success = 100000000;
@@ -375,7 +393,9 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                         var statement = $"contacts({contactId})";
                         HttpResponseMessage updateResponse = _d365webapiservice.SendUpdateRequestAsync(statement, phone.ToString());
                         if (updateResponse.IsSuccessStatusCode)
+                        {
                             return $"Contact {contactId} phone number updated.";
+                        }
                         else
                             return $"Faile to update contact {contactId} phone number.";
                     }
@@ -420,17 +440,8 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                             { "iosas_notes",value.iosas_notes }
                         };
 
-            if (submitted)
-            {
-                eoi["iosas_reviewstatus"] = 100000002; //In progress so that confirmation email is sent to the applicant
-                eoi["iosas_submissiondate"] = DateTime.UtcNow;
-            }
-            else
-            {
-                eoi["iosas_reviewstatus"] = 100000006; //Draft
-            }
-
-
+          
+            eoi["iosas_reviewstatus"] = 100000006; //Draft
             eoi["iosas_schoolauthorityname"] = value.iosas_schoolauthorityname;
             eoi["iosas_authorityaddressline1"] = value.iosas_authorityaddressline1;
             eoi["iosas_authorityaddressline2"] = value.iosas_authorityaddressline2;
