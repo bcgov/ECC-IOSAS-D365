@@ -204,6 +204,10 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='createdby' />
                                     <attribute name='modifiedby' />
                                     <attribute name='iosas_portalapplicationstep' />
+                                    <attribute name='iosas_endgrade' />
+                                    <attribute name='iosas_phonenumber' />
+                                    <attribute name='iosas_additionalprograms' />
+                                    <attribute name='iosas_willdevelopbudgetforexpenditurebasedoniep'  />
                                     <filter type='and'>
                                         <condition attribute='iosas_applicationid' operator='eq' value='{id}' />
                                         <filter type='or'>
@@ -392,7 +396,6 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='iosas_halfdaykindergartenproposeddaysinsession' />
                                     <attribute name='iosas_incorporationtype' />
                                     <attribute name='iosas_mailingaddresspostalcode' />
-                                    <attribute name='iosas_mailingaddresspostalcode' />
                                     <attribute name='iosas_fulldaykindergartenproposedhoursperday' />
                                     <attribute name='iosas_overview' />
                                     <attribute name='createdon' />
@@ -402,6 +405,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='createdby' />
                                     <attribute name='modifiedby' />
                                     <attribute name='iosas_portalapplicationstep' />
+                                    <attribute name='iosas_willdevelopbudgetforexpenditurebasedoniep’  />
                                     <filter type='and'>
                                        <condition attribute='statecode' operator='eq' value='0'/>
                                        <filter type='or'>

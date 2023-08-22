@@ -218,7 +218,6 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                     $"Failed to Retrieve records: {response.ReasonPhrase}");
         }
 
-
         //        [HttpGet("GetBySchoolAuthority")]
         //        public ActionResult<string> GetBySchoolAuthority(string schoolAuthorityId)
         //        {
