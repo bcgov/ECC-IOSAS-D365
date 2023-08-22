@@ -405,7 +405,6 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='createdby' />
                                     <attribute name='modifiedby' />
                                     <attribute name='iosas_portalapplicationstep' />
-                                    <attribute name='iosas_willdevelopbudgetforexpenditurebasedoniep’  />
                                     <filter type='and'>
                                        <condition attribute='statecode' operator='eq' value='0'/>
                                        <filter type='or'>
