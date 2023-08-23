@@ -614,6 +614,9 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             app["iosas_willdevelopbudgetforexpenditurebasedoniep"] = value.iosas_willdevelopbudgetforexpenditurebasedoniep;
             app["iosas_willhavecompletioncertificatepolicy"] = value.iosas_willhavecompletioncertificatepolicy;
             app["iosas_ifnotoanyschoolpolicyexplainwhy"] = value.iosas_ifnotoanyschoolpolicyexplainwhy;
+            app["iosas_portalapplicationstep"] = value.iosas_portalapplicationstep;
+            app["iosas_choicefieldswithnoselection"] = value.iosas_choicefieldswithnoselection;
+            app["iosas_additionalprograms"] = value.iosas_additionalprograms;
 
 
             return app;
