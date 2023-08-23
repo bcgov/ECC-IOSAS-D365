@@ -86,6 +86,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='iosas_incorporationcertificateissuedate' />  
                                     <attribute name='iosas_certificateofgoodstandingissuedate' /> 
                                     <attribute name='iosas_notes' /> 
+                                    <attribute name='iosas_authortiycontact' /> 
                                     <filter type='and'>
                                         <condition attribute='iosas_expressionofinterestid' operator='eq' value='{id}' />
                                         <filter type='or'>

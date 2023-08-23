@@ -208,6 +208,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='iosas_phonenumber' />
                                     <attribute name='iosas_additionalprograms' />
                                     <attribute name='iosas_willdevelopbudgetforexpenditurebasedoniep'  />
+                                    <attribute name='iosas_choicefieldswithnoselection'  />
                                     <filter type='and'>
                                         <condition attribute='iosas_applicationid' operator='eq' value='{id}' />
                                         <filter type='or'>
@@ -406,6 +407,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='modifiedby' />
                                     <attribute name='iosas_portalapplicationstep' />
                                     <filter type='and'>
+                                       <condition attribute='statuscode' operator='ne' value='100000008'/>
                                        <condition attribute='statecode' operator='eq' value='0'/>
                                        <filter type='or'>
                                            <condition attribute='iosas_schoolauthorityhead' operator='eq' value='{userId}' />

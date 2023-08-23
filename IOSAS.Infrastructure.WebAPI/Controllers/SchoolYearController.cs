@@ -43,6 +43,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='edu_enddate'/>
                                     <attribute name='edu_yearid'/>
                                     <attribute name='iosas_label'/>
+                                    <attribute name='iosas_currentapplicationsyear'/>
                                     <filter type='and'>
                                         <condition attribute='edu_yearid' operator='eq' value='{id}'/>
                                     </filter>
@@ -84,6 +85,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='edu_enddate'/>
                                     <attribute name='edu_yearid'/>
                                     <attribute name='iosas_label'/> 
+                                    <attribute name='iosas_currentapplicationsyear'/>
                                     <filter type='and'>
                                        <condition attribute='statecode' operator='eq' value='0'/>
                                     </filter>
