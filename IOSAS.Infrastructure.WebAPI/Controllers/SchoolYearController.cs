@@ -87,8 +87,8 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='iosas_label'/> 
                                     <attribute name='iosas_currentapplicationsyear'/>
                                     <filter type='and'>
-                                       <condition attribute='statecode' operator='eq' value='0'/>
-                                    </filter>
+                                        <condition attribute='statecode' operator='eq' value='0'/>
+                                     </filter>
                                 </entity>
                             </fetch>";
 
