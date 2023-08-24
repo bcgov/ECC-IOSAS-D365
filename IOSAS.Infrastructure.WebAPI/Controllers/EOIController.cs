@@ -128,48 +128,16 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             var fetchXml = $@"<fetch version='1.0' output-format='xml-platform' mapping='logical' no-lock='false' distinct='true'>
                                 <entity name='iosas_expressionofinterest'>
                                     <attribute name='iosas_name' />   
-                                    <attribute name='iosas_existingauthority' />  
-                                    <attribute name='iosas_existinghead' />  
-                                    <attribute name='iosas_authorityhead' />  
-                                    <attribute name='iosas_designatedcontactsameasauthorityhead' />  
-                                    <attribute name='iosas_existingcontact' />  
-                                    <attribute name='iosas_edu_year' />  
+                                    <attribute name='iosas_eoinumber' />  
+                                    <attribute name='iosas_expressionofinterestid' />  
                                     <attribute name='iosas_proposedschoolname' />  
-                                    <attribute name='iosas_schooladdressline1' />  
-                                    <attribute name='iosas_schooladdressline2' />  
-                                    <attribute name='iosas_schoolcity' />  
-                                    <attribute name='iosas_schoolprovince' />  
-                                    <attribute name='iosas_schoolpostalcode' />  
-                                    <attribute name='iosas_schoolcountry' />  
-                                    <attribute name='iosas_website' />  
+                                    <attribute name='iosas_reviewstatus' />  
                                     <attribute name='iosas_groupclassification' />  
-                                    <attribute name='iosas_startgrade' />  
-                                    <attribute name='iosas_endgrade' />  
-                                    <attribute name='iosas_schoolauthorityname' />  
-                                    <attribute name='iosas_authorityaddressline1' />  
-                                    <attribute name='iosas_authorityaddressline2' />
-                                    <attribute name='iosas_authoritycity' /> 
-                                    <attribute name='iosas_authoritypostalcode' />  
-                                    <attribute name='iosas_authorityprovince' />  
-                                    <attribute name='iosas_authoritycountry' />
-                                    <attribute name='iosas_authorityheadfirstname' />
-                                    <attribute name='iosas_schoolauthorityheadname' />
-                                    <attribute name='iosas_schoolauthorityheademail' />
-                                    <attribute name='iosas_schoolauthorityheadphone' />
-                                    <attribute name='iosas_designatedcontactfirstname' />
-                                    <attribute name='iosas_schoolauthoritycontactname' />
-                                    <attribute name='iosas_schoolauthoritycontactemail' />
-                                    <attribute name='iosas_schoolauthoritycontactphone' />
-                                    <attribute name='iosas_reviewstatus' />
-                                    <attribute name='iosas_submissiondate' />
-                                    <attribute name='iosas_approvaldate' />
+                                    <attribute name='iosas_edu_year' />  
                                     <attribute name='createdon' />
                                     <attribute name='modifiedon' />
                                     <attribute name='statecode' />
                                     <attribute name='statuscode' />
-                                    <attribute name='iosas_eoinumber' />
-                                    <attribute name='iosas_expressionofinterestid' />
-                                    <attribute name='iosas_seekgrouponeclassification' />  
                                     <filter type='and'>
                                        <condition attribute='statecode' operator='eq' value='0'/>
                                        <condition attribute='iosas_reviewstatus' operator='ne' value='100000005' />
@@ -253,6 +221,24 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
 
             if (response.IsSuccessStatusCode)
             {
+
+                //update to trigger flow which sends confirmation email
+                if (submitted)
+                {
+                    var submitData = new JObject
+                        {
+                            { "iosas_reviewstatus", 100000002}, //Set to in progress
+                            { "iosas_submissiondate", DateTime.UtcNow}
+                        };
+                    var submitStatement = $"iosas_expressionofinterests({id})";
+
+                    HttpResponseMessage submitResp = _d365webapiservice.SendUpdateRequestAsync(submitStatement, submitData.ToString());
+                    if (!submitResp.IsSuccessStatusCode)
+                    {
+                        return StatusCode((int)submitResp.StatusCode, $"Failed to submit EOI: {submitResp.ReasonPhrase}");
+                    }
+                }
+
                 //log activity
                 int activity = submitted ? 100000002 : 100000001;
                 int success = 100000000;
