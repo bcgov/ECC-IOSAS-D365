@@ -209,7 +209,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='iosas_additionalprograms' />
                                     <attribute name='iosas_willdevelopbudgetforexpenditurebasedoniep'  />
                                     <attribute name='iosas_choicefieldswithnoselection'  />
-                                    <attribute name='iosas_awareoftherequirementsforchecks'  />
+                                    <attribute name='iosas_awareoftherequirementsforcrchecks'  />
                                     <filter type='and'>
                                         <condition attribute='iosas_applicationid' operator='eq' value='{id}' />
                                         <filter type='or'>
@@ -477,7 +477,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             app["iosas_additionalprograms"] = value.iosas_additionalprograms;
             app["iosas_numberofteachers"] = value.iosas_numberofteachers;
             app["iosas_awareofcertificationrequirements"] = value.iosas_awareofcertificationrequirements;
-            app["iosas_awareoftherequirementsforchecks"] = value.iosas_awareoftherequirementsforchecks;
+            app["iosas_awareoftherequirementsforcrchecks"] = value.iosas_awareoftherequirementsforcrchecks;
 
             return app;
 

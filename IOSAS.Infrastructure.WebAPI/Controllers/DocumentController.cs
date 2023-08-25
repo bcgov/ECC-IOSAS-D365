@@ -118,13 +118,13 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                     var bytes = Convert.FromBase64String(doc.Content);
                     var content = new MemoryStream(bytes);
                     var response = _d365webapiservice.SendUploadFileRequestAsync($"iosas_documents({id})/iosas_file?x-ms-file-name={doc.FileName}", content);
-                    if (createResp.IsSuccessStatusCode)
+                    if (response.IsSuccessStatusCode)
                     {
                         return Ok("The document uploaded successfully.");
                     }
                     else
-                        return StatusCode((int)createResp.StatusCode,
-                            $"Failed to upload the document: {createResp.ReasonPhrase}");
+                        return StatusCode((int)response.StatusCode,
+                            $"Failed to upload the document: {response.ReasonPhrase}");
                 }
                 else
                     return StatusCode((int)HttpStatusCode.InternalServerError, "Unable to create record at this time");
