@@ -99,7 +99,8 @@ print-status:
 	@echo " | BUILD_ID: 	$(COMMIT_SHA) "
 	@echo " | BUILD_TAG: 	$(BUILD_TAG) "
 	@echo " | HOST NAME: 	$(HOST) "
-	@echo ' | APP CONFIG: 	"$(APP_CONFIG)" '
+	@echo ' | APP CONFIG:'
+	@echo $(APP_CONFIG)
 	@echo " +---------------------------------------------------------+ "
 
 
