@@ -99,7 +99,7 @@ print-status:
 	@echo " | BUILD_ID: 	$(COMMIT_SHA) "
 	@echo " | BUILD_TAG: 	$(BUILD_TAG) "
 	@echo " | HOST NAME: 	$(HOST) "
-	@echo ' | APP CONFIG:'
+	@echo " | APP CONFIG:"
 	@echo '$(APP_CONFIG)'
 	@echo " +---------------------------------------------------------+ "
 
@@ -123,7 +123,7 @@ api-create-certificate:
 init-api:
 	@echo "++\n Init Api in $(NAMESPACE) \n++"
 	@oc -n $(NAMESPACE) delete configmap $(API)-$(ENV_PREFIX)-config || true
-	@oc -n $(NAMESPACE) create configmap $(API)-$(ENV_PREFIX)-config --from-literal=appsettings.json=$(APP_CONFIG)
+	@oc -n $(NAMESPACE) create configmap $(API)-$(ENV_PREFIX)-config --from-literal=appsettings.json='$(APP_CONFIG)'
 
 
 init-artifactory-secret-credential:
