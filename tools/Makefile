@@ -99,7 +99,7 @@ print-status:
 	@echo " | BUILD_ID: 	$(COMMIT_SHA) "
 	@echo " | BUILD_TAG: 	$(BUILD_TAG) "
 	@echo " | HOST NAME: 	$(HOST) "
-	@echo " | APP CONFIG: 	$(APP_CONFIG) "
+	@echo ' | APP CONFIG: 	"$(APP_CONFIG)" '
 	@echo " +---------------------------------------------------------+ "
 
 
@@ -172,5 +172,26 @@ promote-api:
 	test -n "$(BUILD_NAMESPACE)"
 	echo "+\n++ API: Deploying latest tag $(BUILD_TAG) API with ENV $(ENV_PREFIX) $\n+"
 	sh config/promote-app.sh $(BUILD_NAMESPACE) $(API) $(BUILD_TAG) $(ENV_PREFIX)
+
+
+# Tagging env
+tag-test:
+ifdef ticket
+	@git tag -fa test -m "Deploy $(ticket) to TEST Openshift env"
+else
+	@echo -e '\nTicket name missing - Example :: make tag-test ticket=HCAP-ABC \n'
+	@echo -e 'Falling Back to using branch name\n'
+	@git tag -fa test -m "Deploy $(git rev-parse --abbrev-ref HEAD) to TEST env"
+endif
+	@git push --force origin refs/tags/test:refs/tags/test
+
+tag-prod:
+ifdef ticket
+	@git tag -fa prod -m "Deploy $(ticket) to PROD Openshift env"
+else
+	@echo -e '\nTicket name missing - Example :: make tag-test ticket=HCAP-ABC \n'
+	@echo -e 'Falling Back to using branch name\n'
+	@git tag -fa prod -m "Deploy $(git rev-parse --abbrev-ref HEAD) to PROD env"
+endif
 
 
