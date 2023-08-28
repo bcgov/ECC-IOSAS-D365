@@ -100,7 +100,7 @@ print-status:
 	@echo " | BUILD_TAG: 	$(BUILD_TAG) "
 	@echo " | HOST NAME: 	$(HOST) "
 	@echo ' | APP CONFIG:'
-	@echo $(APP_CONFIG)
+	@echo '$(APP_CONFIG)'
 	@echo " +---------------------------------------------------------+ "
 
 
