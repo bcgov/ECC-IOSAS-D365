@@ -23,9 +23,9 @@ env:
   ENV_PREFIX: ${{ inputs.oc_env_suffix }}
 jobs:
   api:
-    name: OpenShift Build & Deploy
+    name: OpenShift Deploy
     runs-on: ubuntu-latest
-    concurrency: ci-build-api-dev
+    concurrency: ci-deploy-api-dev
     timeout-minutes: 20
     steps:
       - name: Checkout
