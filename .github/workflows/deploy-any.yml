@@ -30,7 +30,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Build changes
+      - name: Deploy changes
         working-directory: "./tools"
         run: |
           oc login --token="$AUTH_TOKEN" --server="$CLUSTER"
