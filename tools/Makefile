@@ -167,7 +167,8 @@ update-dc-api:
 		-p BUILD_ID=$(BUILD_TAG) | oc -n $(NAMESPACE) apply -f -
 
 deploy-api: update-dc-api
-	$(call rollout_and_wait,dc/$(API))
+	@oc rollout cancel dc/$(API) 2> /dev/null || true && echo "No rollout in progress"
+	@oc -n $(NAMESPACE) rollout status dc/$(API) --watch=true
 
 promote-api:
 	test -n "$(BUILD_NAMESPACE)"
