@@ -1,0 +1,36 @@
+# Build and Deploy to dev env.
+# Trigger with tag dev
+# Connected with repo environment 'dev'
+name: Boot strap env
+
+on:
+  push:
+    tags:
+      - test
+      - prod
+
+env:
+  CLUSTER: https://api.silver.devops.gov.bc.ca:6443
+  AUTH_TOKEN: ${{ secrets.AUTH_TOKEN_OCP4 }}
+  BUILD_REF: ${{ github.base_ref }}
+  APP_CONFIG_DEV: ${{ vars.APP_CONFIG_DEV }}
+jobs:
+  api:
+    name: OpenShift Build & Deploy
+    runs-on: ubuntu-latest
+    concurrency: ci-build-api-dev
+    timeout-minutes: 20
+    steps:
+      - name: Set env
+        run: echo "ENV_PREFIX=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build changes
+        working-directory: "./tools"
+        run: |
+          oc login --token="$AUTH_TOKEN" --server="$CLUSTER"
+          make print-status
+          make api-create-certificate
+          make init-api
+          make promote-api
+          make deploy-api
