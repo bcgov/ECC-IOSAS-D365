@@ -16,6 +16,8 @@ env:
   APP_CONFIG_DEV: ${{ vars.APP_CONFIG_DEV }}
   APP_CONFIG_TEST: ${{ vars.APP_CONFIG_TEST }}
   APP_CONFIG_PROD: ${{ vars.APP_CONFIG_PROD }}
+  NAMESPACE_TEST: ${{ vars.NAMESPACE_TEST }}
+  NAMESPACE_PROD: ${{ vars.NAMESPACE_PROD }}
 jobs:
   api:
     name: OpenShift Deploy
