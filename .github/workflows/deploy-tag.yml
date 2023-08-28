@@ -14,6 +14,8 @@ env:
   AUTH_TOKEN: ${{ secrets.AUTH_TOKEN_OCP4 }}
   BUILD_REF: ${{ github.base_ref }}
   APP_CONFIG_DEV: ${{ vars.APP_CONFIG_DEV }}
+  APP_CONFIG_TEST: ${{ vars.APP_CONFIG_TEST }}
+  APP_CONFIG_PROD: ${{ vars.APP_CONFIG_PROD }}
 jobs:
   api:
     name: OpenShift Deploy
