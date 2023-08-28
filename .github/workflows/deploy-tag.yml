@@ -1,7 +1,7 @@
 # Build and Deploy to dev env.
 # Trigger with tag dev
 # Connected with repo environment 'dev'
-name: Boot strap env
+name: Deploy application with tag
 
 on:
   push:
