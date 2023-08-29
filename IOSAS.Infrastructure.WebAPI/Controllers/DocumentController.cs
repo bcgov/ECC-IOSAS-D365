@@ -120,6 +120,20 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                     var response = _d365webapiservice.SendUploadFileRequestAsync($"iosas_documents({id})/iosas_file?x-ms-file-name={doc.FileName}", content);
                     if (response.IsSuccessStatusCode)
                     {
+                        //TODO: fetch doc details including name before returning to consumer?
+                        string fName  = string.Empty;
+                        while (string.IsNullOrEmpty(fName))
+                        {
+                            //https://iosasdev.crm3.dynamics.com/api/data/v9.2/iosas_documents(fc3bd5fb-a643-ee11-be6e-000d3af4f417)
+                            var docDetailsResp = _d365webapiservice.SendRetrieveRequestAsync($"iosas_documents({id})", true);
+                            JObject body = JObject.Parse(docDetailsResp.Content.ReadAsStringAsync().Result);
+                            if (body != null)
+                            {
+                                fName = (string?)body.GetValue("iosas_file_name");                               
+                            }
+                            Thread.Sleep(3000);
+                        }
+
                         return Ok("The document uploaded successfully.");
                     }
                     else
