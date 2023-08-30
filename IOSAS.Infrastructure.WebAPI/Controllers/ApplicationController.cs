@@ -210,6 +210,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='iosas_willdevelopbudgetforexpenditurebasedoniep'  />
                                     <attribute name='iosas_choicefieldswithnoselection'  />
                                     <attribute name='iosas_awareoftherequirementsforcrchecks'  />
+                                    <attribute name='iosas_precertdocumentssubmitted'  />
                                     <filter type='and'>
                                         <condition attribute='iosas_applicationid' operator='eq' value='{id}' />
                                         <filter type='or'>
@@ -478,7 +479,8 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             app["iosas_numberofteachers"] = value.iosas_numberofteachers;
             app["iosas_awareofcertificationrequirements"] = value.iosas_awareofcertificationrequirements;
             app["iosas_awareoftherequirementsforcrchecks"] = value.iosas_awareoftherequirementsforcrchecks;
-
+            app["iosas_precertdocumentssubmitted"] = value.iosas_precertdocumentssubmitted;
+            
             return app;
 
         }

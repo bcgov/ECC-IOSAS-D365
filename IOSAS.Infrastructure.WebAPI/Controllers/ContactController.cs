@@ -109,7 +109,9 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             int success = 100000000;
             int activity = 100000000;
 
-          
+           
+
+
             if (exists.IsSuccessStatusCode)
             {
                 var root = JToken.Parse(exists.Content.ReadAsStringAsync().Result);
@@ -120,7 +122,6 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                     dynamic json = JsonConvert.DeserializeObject(result);
                     string contactId = json.value[0].contactid.ToString();
 
-                    //TODO: If logged in with Invite code or contact has no external id then update contact
                     if (json.value[0].iosas_externaluserid == null || value.iosas_invitecode != null)
                     {
                         var updateValue = new JObject
@@ -138,7 +139,9 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                     }
                     //Log activity
                     Helper.LogUserActvity(success, activity, _d365webapiservice, contactId, value.firstname.ToString(), value.lastname.ToString());
-                    return Ok(result);
+                    string selectStatement = $"contacts({contactId})?$select=fullname,emailaddress1,contactid,firstname,lastname,telephone1,iosas_loginenabled,iosas_externaluserid,iosas_invitecode";
+                    var reponseContactDetails = _d365webapiservice.SendRetrieveRequestAsync(selectStatement, true);
+                    return Ok(reponseContactDetails.Content.ReadAsStringAsync().Result);
                 }
                 else if (value.iosas_invitecode == null)  //If invite code is provided contact must already exist.  We don't create without invitation
                 {
@@ -217,77 +220,5 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 return StatusCode((int)response.StatusCode,
                     $"Failed to Retrieve records: {response.ReasonPhrase}");
         }
-
-        //        [HttpGet("GetBySchoolAuthority")]
-        //        public ActionResult<string> GetBySchoolAuthority(string schoolAuthorityId)
-        //        {
-        //            if (string.IsNullOrEmpty(schoolAuthorityId))
-        //                return BadRequest("Invalid Request");
-
-        //            var fetchXml = $@"<fetch version='1.0' output-format='xml-platform' mapping='logical' no-lock='false' distinct='true'>
-        //    <entity name='contact'>
-        //        <attribute name='entityimage_url' />
-        //        <attribute name='fullname' />
-        //        <order attribute='fullname' descending='false' />
-        //        <attribute name='emailaddress1' />
-        //        <attribute name='contactid' />
-        //        <attribute name='firstname' />
-        //        <attribute name='lastname' />
-        //        <attribute name='telephone1' />
-        //        <attribute name='iosas_loginenabled' />
-        //        <attribute name='iosas_externaluserid' />
-        //        <attribute name='iosas_invitecode' />
-        //        <filter type='and'>
-        //             <condition attribute='statecode' operator='eq' value='0' />
-        //            <condition attribute='iosas_edu_schoolauthority' operator='eq' value='{schoolAuthorityId}' />
-        //        </filter>
-        //    </entity>
-        //</fetch>";
-
-        //            var message = $"contacts?fetchXml=" + WebUtility.UrlEncode(fetchXml);
-
-        //            var response = _d365webapiservice.SendMessageAsync(HttpMethod.Get, message);
-        //            if (response.IsSuccessStatusCode)
-        //            {
-        //                var root = JToken.Parse(response.Content.ReadAsStringAsync().Result);
-
-        //                if (root.Last().First().HasValues)
-        //                {
-        //                    return Ok(response.Content.ReadAsStringAsync().Result);
-        //                }
-        //                else
-        //                {
-        //                    return Ok($"[]");
-        //                }
-        //            }
-        //            else
-        //                return StatusCode((int)response.StatusCode,
-        //                    $"Failed to Retrieve records: {response.ReasonPhrase}");
-        //        }
-
-
-        //        [HttpPatch("UpdateLogin")]
-        //        public ActionResult<string> UpdateLogin(string id, string externalId)
-        //        {
-        //            if (string.IsNullOrEmpty(id))
-        //                return BadRequest("Invalid Request - Contact unique identfier is required.");
-
-        //            var value = new JObject
-        //                        {
-        //                            { "iosas_externaluserid", externalId},
-        //                            { "iosas_invitecode", null}
-        //                        };
-
-        //            var selectStatement = $"contacts({id})";
-
-        //            HttpResponseMessage response = _d365webapiservice.SendUpdateRequestAsync(selectStatement, value.ToString());
-
-        //            if (response.IsSuccessStatusCode)
-        //                return Ok($"Contact {externalId} login updated.");
-        //            else
-        //                return StatusCode((int)response.StatusCode,
-        //                    $"Failed to Update record: {response.ReasonPhrase}");
-        //        }
-
     }
 }
