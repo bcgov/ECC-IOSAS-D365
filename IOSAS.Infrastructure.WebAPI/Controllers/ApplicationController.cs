@@ -334,9 +334,9 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             if (body != null)
             {
                 var statusId = body.GetValue("statuscode");
-                if (int.Parse((string)statusId) != 100000001)
+                if (int.Parse((string)statusId) == 100000002)
                 {
-                    return BadRequest($"Application {value.iosas_name} not in draft mode.");
+                    return BadRequest($"Application {value.iosas_name} is already submitted.");
                 }
             }
 
