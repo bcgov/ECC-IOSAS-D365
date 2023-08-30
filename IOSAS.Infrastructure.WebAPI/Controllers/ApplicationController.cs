@@ -320,7 +320,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
         }
 
         [HttpPatch("Update")]
-        public ActionResult<string> Update([FromBody] dynamic value, string id, string userId, bool submitted)
+        public ActionResult<string> Update([FromBody] dynamic value, string id, string userId, bool? submitted)
         {
             if (string.IsNullOrEmpty(id))
                 return BadRequest("Invalid Request - Id is required");
@@ -351,7 +351,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                     $"Failed to Update record: {response.ReasonPhrase}");
         }
 
-        private JObject PrepareApp(dynamic value, bool submitted)
+        private JObject PrepareApp(dynamic value, bool? submitted)
         {
             var app = new JObject();
 
@@ -391,17 +391,20 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             app["iosas_detailsofinvolvement"] = value.iosas_detailsofinvolvement;
 
             app["iosas_submissionmethod"] = 100000001;
-            if (submitted)
+            if (submitted.HasValue)
             {
-                app["statuscode"] = 100000002; //New (sbumitted)
-                app["iosas_submissiondate"] = DateTime.UtcNow;
+                if (submitted.Value)
+                {
+                    app["statuscode"] = 100000002; //New (sbumitted)
+                    app["iosas_submissiondate"] = DateTime.UtcNow;
+                }
+                else
+                {
+                    app["statuscode"] = 100000001; //Draft
+                }
             }
-            else
-            {
-                app["statuscode"] = 100000001; //Draft
-            }
-            app["iosas_DesignatedContact@odata.bind"] = $"/contacts({value._iosas_designatedcontact_value})";
 
+            app["iosas_DesignatedContact@odata.bind"] = $"/contacts({value._iosas_designatedcontact_value})";
 
             app["iosas_preexistingauthorityhead"] = value.iosas_preexistingauthorityhead;          
             if (value.iosas_preexistingauthorityhead != null && (bool)value.iosas_preexistingauthorityhead)
