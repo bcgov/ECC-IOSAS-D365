@@ -13,6 +13,7 @@ using IOSAS.Infrastructure.WebAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Xrm.Sdk.Messages;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -175,7 +176,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             if (string.IsNullOrEmpty(externalId))
                 return BadRequest("Invalid Request - BCeID or Invite Code is required.");
 
-            // https://dev-ecc-iosas.apps.silver.devops.gov.bc.ca/school-application/app-1234?invitecode=guid
+            //https://dev-ecc-iosas.apps.silver.devops.gov.bc.ca/school-application/app-1234?invitecode=guid
 
             var fetchXml = $@"<fetch version='1.0' output-format='xml-platform' mapping='logical' no-lock='false' distinct='true'>
                                             <entity name='contact'>
@@ -219,6 +220,26 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             else
                 return StatusCode((int)response.StatusCode,
                     $"Failed to Retrieve records: {response.ReasonPhrase}");
+        }
+
+
+        [HttpGet("GetById")]
+        public ActionResult<string> GetById(string contactId)
+        {
+            if (string.IsNullOrEmpty(contactId))
+                return BadRequest("Invalid Request - BCeID or Invite Code is required.");
+
+            //https://dev-ecc-iosas.apps.silver.devops.gov.bc.ca/school-application/app-1234?invitecode=guid
+            string selectStatement = $"contacts({contactId})?$select=fullname,emailaddress1,contactid,firstname,lastname,telephone1,iosas_loginenabled,iosas_externaluserid,iosas_invitecode";
+
+            var response = _d365webapiservice.SendRetrieveRequestAsync(selectStatement, true);
+            if (response.IsSuccessStatusCode)
+            {
+                return Ok(response.Content.ReadAsStringAsync().Result);
+            }
+            else
+                return StatusCode((int)response.StatusCode, $"Failed to retrieve user details: {contactId}");
+
         }
     }
 }
