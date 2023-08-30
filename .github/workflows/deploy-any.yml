@@ -1,38 +1,45 @@
 # Build and Deploy to dev env.
 # Trigger with tag dev
 # Connected with repo environment 'dev'
-name: OpenShift Build and Deploy to api (Dev)
+name: Deploy Application manually
 
 on:
-  push:
-    branches:
-      - main-dev
-      - dev
   workflow_dispatch:
+    inputs:
+      oc_env_suffix:
+        description: The Env suffic of oc name space
+        required: true
+        type: choice
+        options:
+          - dev
+          - test
+          - prod
 
 env:
   CLUSTER: https://api.silver.devops.gov.bc.ca:6443
   AUTH_TOKEN: ${{ secrets.AUTH_TOKEN_OCP4 }}
   BUILD_REF: ${{ github.base_ref }}
   APP_CONFIG_DEV: ${{ vars.APP_CONFIG_DEV }}
-  NAMESPACE_DEV: d1273d-dev
+  APP_CONFIG_TEST: ${{ vars.APP_CONFIG_TEST }}
+  APP_CONFIG_PROD: ${{ vars.APP_CONFIG_PROD }}
+  ENV_PREFIX: ${{ inputs.oc_env_suffix }}
+  NAMESPACE_TEST: ${{ vars.NAMESPACE_TEST }}
+  NAMESPACE_PROD: ${{ vars.NAMESPACE_PROD }}
 jobs:
   api:
-    name: OpenShift Build & Deploy
+    name: OpenShift Deploy
     runs-on: ubuntu-latest
-    concurrency: ci-build-api-dev
+    concurrency: ci-deploy-api-dev
     timeout-minutes: 20
-    env:
-      ENV_PREFIX: dev
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Build changes
+      - name: Deploy changes
         working-directory: "./tools"
         run: |
           oc login --token="$AUTH_TOKEN" --server="$CLUSTER"
           make print-status
+          make api-create-certificate
           make init-api
-          make build-api
           make promote-api
           make deploy-api
