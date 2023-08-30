@@ -400,10 +400,19 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             {
                 app["statuscode"] = 100000001; //Draft
             }
-
             app["iosas_DesignatedContact@odata.bind"] = $"/contacts({value._iosas_designatedcontact_value})";
-            app["iosas_SchoolAuthorityHead@odata.bind"] = $"/contacts({value._iosas_schoolauthorityhead_value})";
 
+
+            app["iosas_preexistingauthorityhead"] = value.iosas_preexistingauthorityhead;          
+            if (value.iosas_preexistingauthorityhead != null && (bool)value.iosas_preexistingauthorityhead)
+                app["iosas_SchoolAuthorityHead@odata.bind"] = $"/contacts({value._iosas_schoolauthorityhead_value})";
+            else
+                app["iosas_SchoolAuthorityHead@odata.bind"] = null;
+
+            app["iosas_authorityheadfirstname"] = value.iosas_authorityheadfirstname;
+            app["iosas_authorityheadlastname"] = value.iosas_authorityheadlastname;
+            app["iosas_authorityheademail"] = value.iosas_authorityheademail;
+            app["iosas_authorityheadphone"] = value.iosas_authorityheadphone;
 
             app["iosas_numberofstudentskindergarten"] = value.iosas_numberofstudentskindergarten;
             app["iosas_numberofstudentsg1"] = value.iosas_numberofstudentsg1;
