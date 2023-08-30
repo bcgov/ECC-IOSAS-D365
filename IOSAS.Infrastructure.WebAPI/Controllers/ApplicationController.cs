@@ -416,6 +416,9 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             app["iosas_authorityheadlastname"] = value.iosas_authorityheadlastname;
             app["iosas_authorityheademail"] = value.iosas_authorityheademail;
             app["iosas_authorityheadphone"] = value.iosas_authorityheadphone;
+            app["iosas_dateoflastannualreport"] = value.iosas_dateoflastannualreport;
+            app["iosas_officialregistrationnumber"] = value.iosas_officialregistrationnumber;
+            app["iosas_incorporationtype"] = value.iosas_incorporationtype;
 
             app["iosas_numberofstudentskindergarten"] = value.iosas_numberofstudentskindergarten;
             app["iosas_numberofstudentsg1"] = value.iosas_numberofstudentsg1;
@@ -492,7 +495,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             app["iosas_awareofcertificationrequirements"] = value.iosas_awareofcertificationrequirements;
             app["iosas_awareoftherequirementsforcrchecks"] = value.iosas_awareoftherequirementsforcrchecks;
             app["iosas_precertdocumentssubmitted"] = value.iosas_precertdocumentssubmitted;
-            
+
             return app;
 
         }
