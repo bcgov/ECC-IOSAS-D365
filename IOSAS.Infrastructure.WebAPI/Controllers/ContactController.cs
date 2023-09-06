@@ -223,7 +223,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
         public ActionResult<string> GetById(string contactId)
         {
             if (string.IsNullOrEmpty(contactId))
-                return BadRequest("Invalid Request - BCeID or Invite Code is required.");
+                return BadRequest("Invalid Request - Contact Id is required.");
 
             //https://dev-ecc-iosas.apps.silver.devops.gov.bc.ca/school-application/app-1234?invitecode=guid
             string selectStatement = $"contacts({contactId})?$select=fullname,emailaddress1,contactid,firstname,lastname,telephone1,iosas_loginenabled,iosas_externaluserid,iosas_invitecode";
