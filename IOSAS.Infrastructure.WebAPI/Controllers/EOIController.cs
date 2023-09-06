@@ -92,6 +92,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                         <filter type='or'>
                                            <condition attribute='iosas_authorityhead' operator='eq' value='{userId}' />
                                            <condition attribute='iosas_authortiycontact' operator='eq' value='{userId}' />
+                                           <condition attribute='iosas_submitter' operator='eq' value='{userId}' />
                                         </filter>
                                     </filter>
                                 </entity>
@@ -490,6 +491,8 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 }
             }
             //}
+
+            //TODO: In Update/Create have to check contact type and set it if required?
 
             return eoi;
         }
