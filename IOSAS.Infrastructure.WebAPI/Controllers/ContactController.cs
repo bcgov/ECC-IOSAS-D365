@@ -55,10 +55,10 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             //    return BadRequest("telephone1 is not provided");
 
             string fetchXml = "";
-            if (value.iosas_invitecode == null)
-            {
-                //check by email or external id
-                fetchXml = $@"<fetch version='1.0' output-format='xml-platform' mapping='logical' no-lock='false' distinct='true'>
+            //if (value.iosas_invitecode == null)
+            //{
+            //check by email or external id
+            fetchXml = $@"<fetch version='1.0' output-format='xml-platform' mapping='logical' no-lock='false' distinct='true'>
                                     <entity name='contact'>
                                         <attribute name='entityimage_url' />
                                         <attribute name='fullname' />
@@ -80,38 +80,35 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                         <order attribute='fullname' descending='false' />
                                     </entity>
                                 </fetch>";
-            }
-            else
-            {
-                fetchXml = $@"<fetch version='1.0' output-format='xml-platform' mapping='logical' no-lock='false' distinct='true'>
-                                <entity name='contact'>
-                                    <attribute name='fullname' />
-                                    <attribute name='emailaddress1' />
-                                    <attribute name='contactid' />
-                                    <attribute name='firstname' />
-                                    <attribute name='lastname' />
-                                    <attribute name='telephone1' />
-                                    <attribute name='iosas_loginenabled' />
-                                    <attribute name='iosas_externaluserid' />     
-                                    <filter type='and'>
-                                        <condition attribute='statecode' operator='eq' value='0' />
-                                        <filter type='or'>
-                                            <condition attribute='iosas_invitecode' operator='eq' value='{value.iosas_invitecode}' />
-                                        </filter>
-                                    </filter>
-                                    <order attribute='fullname' descending='false' />
-                                </entity>
-                            </fetch>";
-            }
+            //}
+            //else
+            //{
+            //    fetchXml = $@"<fetch version='1.0' output-format='xml-platform' mapping='logical' no-lock='false' distinct='true'>
+            //                    <entity name='contact'>
+            //                        <attribute name='fullname' />
+            //                        <attribute name='emailaddress1' />
+            //                        <attribute name='contactid' />
+            //                        <attribute name='firstname' />
+            //                        <attribute name='lastname' />
+            //                        <attribute name='telephone1' />
+            //                        <attribute name='iosas_loginenabled' />
+            //                        <attribute name='iosas_externaluserid' />     
+            //                        <filter type='and'>
+            //                            <condition attribute='statecode' operator='eq' value='0' />
+            //                            <filter type='or'>
+            //                                <condition attribute='iosas_invitecode' operator='eq' value='{value.iosas_invitecode}' />
+            //                            </filter>
+            //                        </filter>
+            //                        <order attribute='fullname' descending='false' />
+            //                    </entity>
+            //                </fetch>";
+            //}
 
             var message = $"contacts?fetchXml=" + WebUtility.UrlEncode(fetchXml);
             var exists = _d365webapiservice.SendMessageAsync(HttpMethod.Get, message);
 
             int success = 100000000;
             int activity = 100000000;
-
-           
-
 
             if (exists.IsSuccessStatusCode)
             {
@@ -123,28 +120,28 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                     dynamic json = JsonConvert.DeserializeObject(result);
                     string contactId = json.value[0].contactid.ToString();
 
-                    if (json.value[0].iosas_externaluserid == null || value.iosas_invitecode != null)
-                    {
-                        var updateValue = new JObject
-                        {
-                            { "iosas_externaluserid", value.iosas_externaluserid},
-                            { "iosas_invitecode", null}
-                        };
-                        var statement = $"contacts({contactId})";
+                    //if (json.value[0].iosas_externaluserid == null || value.iosas_invitecode != null)
+                    //{
+                    //    var updateValue = new JObject
+                    //    {
+                    //        { "iosas_externaluserid", value.iosas_externaluserid},
+                    //        { "iosas_invitecode", null}
+                    //    };
+                    //    var statement = $"contacts({contactId})";
 
-                        HttpResponseMessage response = _d365webapiservice.SendUpdateRequestAsync(statement, updateValue.ToString());
-                        if (!response.IsSuccessStatusCode)
-                        {
-                            return StatusCode((int)response.StatusCode, $"Failed to update contact record: {response.ReasonPhrase}");
-                        }
-                    }
+                    //    HttpResponseMessage response = _d365webapiservice.SendUpdateRequestAsync(statement, updateValue.ToString());
+                    //    if (!response.IsSuccessStatusCode)
+                    //    {
+                    //        return StatusCode((int)response.StatusCode, $"Failed to update contact record: {response.ReasonPhrase}");
+                    //    }
+                    //}
                     //Log activity
                     Helper.LogUserActvity(success, activity, _d365webapiservice, contactId, value.firstname.ToString(), value.lastname.ToString());
                     string selectStatement = $"contacts({contactId})?$select=fullname,emailaddress1,contactid,firstname,lastname,telephone1,iosas_loginenabled,iosas_externaluserid,iosas_invitecode";
                     var reponseContactDetails = _d365webapiservice.SendRetrieveRequestAsync(selectStatement, true);
                     return Ok(reponseContactDetails.Content.ReadAsStringAsync().Result);
                 }
-                else if (value.iosas_invitecode == null)  //If invite code is provided contact must already exist.  We don't create without invitation
+                else //if (value.iosas_invitecode == null)  //If invite code is provided contact must already exist.  We don't create without invitation
                 {
                     string selectStatement = "contacts?$select=fullname,emailaddress1,contactid,firstname,lastname,telephone1,iosas_loginenabled,iosas_externaluserid,iosas_invitecode";
                     var createResponse = _d365webapiservice.SendCreateRequestAsyncRtn(selectStatement, value.ToString());
@@ -162,8 +159,8 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                     else
                         return StatusCode((int)exists.StatusCode, $"Failed to create user: {exists.ReasonPhrase}");
                 }
-                else
-                    return StatusCode((int)HttpStatusCode.Conflict, $"Failed to login with provided invite code.");
+                //else
+                //    return StatusCode((int)HttpStatusCode.Conflict, $"Failed to login with provided invite code.");
             }
             else
                 return StatusCode((int)exists.StatusCode, $"Failed to retrieve user details: {exists.ReasonPhrase}");
@@ -193,7 +190,6 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                                 <filter type='and'>
                                                     <condition attribute='statecode' operator='eq' value='0' />
                                                     <filter type='or'>
-                                                        <condition attribute='iosas_invitecode' operator='eq' value='{externalId}' />
                                                         <condition attribute='iosas_externaluserid' operator='eq' value='{externalId}' />
                                                         <condition attribute='emailaddress1' operator='eq' value='{externalId}' />
                                                     </filter>

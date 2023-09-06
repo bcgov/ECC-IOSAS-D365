@@ -141,6 +141,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <filter type='and'>
                                        <condition attribute='statecode' operator='eq' value='0'/>
                                        <condition attribute='iosas_reviewstatus' operator='ne' value='100000005' />
+                                       <condition attribute='iosas_reviewstatus' operator='ne' value='100000007' />
                                        <condition attribute='iosas_reviewstatus' operator='ne' value='100000004' />
                                        <filter type='or'>
                                            <condition attribute='iosas_authorityhead' operator='eq' value='{userId}' />
@@ -179,14 +180,14 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
 
             var value = new JObject
                         {
-                            { "iosas_reviewstatus", 100000005},
-                            { "iosas_reviewnotes", "Abandoned by user" }
+                            { "iosas_reviewstatus", 100000007},
+                            { "iosas_reviewnotes", "Abandoned by applicant" }
                         };
 
             var statement = $"iosas_expressionofinterests({id})";
             HttpResponseMessage response = _d365webapiservice.SendUpdateRequestAsync(statement, value.ToString());
             if (response.IsSuccessStatusCode)
-                return Ok($"EPO {id} Cancelled.");
+                return Ok($"EOI {id} Cancelled.");
             else
                 return StatusCode((int)response.StatusCode,
                     $"Failed to Update record: {response.ReasonPhrase}");
@@ -254,6 +255,9 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
         [HttpPost("Create")]
         public ActionResult<string> Create([FromBody] dynamic value, bool submitted, string? userId = null)
         {
+            if (string.IsNullOrEmpty(userId))
+                return BadRequest("Invalid Request - UserId is required");
+
             string statement = "iosas_expressionofinterests";
 
             //Default status is Draft no need to set it at Creation Time
@@ -294,7 +298,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
 
                     UpdateContactPhoneNumber(value, userId);
 
-                  
+
                     //log activity
                     int activity = submitted ? 100000002 : 100000001;
                     int success = 100000000;
@@ -425,9 +429,8 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                             { "iosas_incorporationcertificateissuedate",value.iosas_incorporationcertificateissuedate },
                             { "iosas_certificateofgoodstandingissuedate",value.iosas_certificateofgoodstandingissuedate },
                             { "iosas_notes",value.iosas_notes }
-                        };
+                        };           
 
-          
             eoi["iosas_reviewstatus"] = 100000006; //Draft
             eoi["iosas_schoolauthorityname"] = value.iosas_schoolauthorityname;
             eoi["iosas_authorityaddressline1"] = value.iosas_authorityaddressline1;
@@ -460,9 +463,14 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 eoi["iosas_schoolauthoritycontactemail"] = value.iosas_schoolauthoritycontactemail;
                 eoi["iosas_schoolauthoritycontactphone"] = value.iosas_schoolauthoritycontactphone;
             }
-            if (!string.IsNullOrEmpty(userId)) //authenticated
+
+            // if submitter (looged in user) and designated contact are the same set both to the guid, otherwise set DC to null submitter to the guid
+            //if (!string.IsNullOrEmpty(userId)) //authenticated - this is always true as unauthentictaed users are not supported as of Sept 05, 2023
+            //{
+            eoi["iosas_Submitter@odata.bind"] = $"/contacts({userId})";
+            var designatedContact = value._iosas_authortiycontact_value == null ? string.Empty : ((string)value._iosas_authortiycontact_value).Replace("{", "").Replace("}", "");
+            if (designatedContact.Equals(userId, StringComparison.InvariantCultureIgnoreCase))
             {
-                //Designated contact
                 eoi["iosas_existingcontact"] = true;
                 eoi["iosas_AuthortiyContact@odata.bind"] = $"/contacts({userId})";
                 if (value.iosas_designatedcontactsameasauthorityhead == true)
@@ -471,6 +479,17 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                     eoi["iosas_existinghead"] = true;
                 }
             }
+            else
+            {
+                eoi["iosas_AuthortiyContact@odata.bind"] = null;
+                eoi["iosas_existingcontact"] = false;
+                if (value.iosas_designatedcontactsameasauthorityhead == true)
+                {
+                    eoi["iosas_AuthorityHead@odata.bind"] = null;
+                    eoi["iosas_existinghead"] = false;
+                }
+            }
+            //}
 
             return eoi;
         }

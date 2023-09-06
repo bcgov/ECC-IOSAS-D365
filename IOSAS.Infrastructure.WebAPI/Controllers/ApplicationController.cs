@@ -266,6 +266,8 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='modifiedby' />
                                     <attribute name='iosas_portalapplicationstep' />
                                     <filter type='and'>
+                                       <condition attribute='statuscode' operator='ne' value='100000012'/>
+                                       <condition attribute='statuscode' operator='ne' value='100000011'/>
                                        <condition attribute='statuscode' operator='ne' value='100000008'/>
                                        <condition attribute='statecode' operator='eq' value='0'/>
                                        <filter type='or'>
@@ -306,14 +308,14 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
 
             var value = new JObject
                         {
-                            { "statuscode", 100000008},
-                            { "iosas_notes", "Withdrawn by user" }
+                            { "statuscode", 100000011},
+                            { "iosas_notes", "Abandoned by applicant" }
                         };
 
             var statement = $"iosas_applications({id})";
             HttpResponseMessage response = _d365webapiservice.SendUpdateRequestAsync(statement, value.ToString());
             if (response.IsSuccessStatusCode)
-                return Ok($"EPO {id} Cancelled.");
+                return Ok($"Application {id} Cancelled.");
             else
                 return StatusCode((int)response.StatusCode,
                     $"Failed to Update record: {response.ReasonPhrase}");
@@ -495,6 +497,8 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             app["iosas_awareofcertificationrequirements"] = value.iosas_awareofcertificationrequirements;
             app["iosas_awareoftherequirementsforcrchecks"] = value.iosas_awareoftherequirementsforcrchecks;
             app["iosas_precertdocumentssubmitted"] = value.iosas_precertdocumentssubmitted;
+            app["iosas_describefamiliaritywithbcscurriculum"] = value.iosas_describefamiliaritywithbcscurriculum;
+            app["iosas_additionalprogramsother "] = value.iosas_additionalprogramsother;
 
             return app;
 
