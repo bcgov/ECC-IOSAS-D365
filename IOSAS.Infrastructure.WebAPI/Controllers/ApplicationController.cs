@@ -498,7 +498,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             app["iosas_awareoftherequirementsforcrchecks"] = value.iosas_awareoftherequirementsforcrchecks;
             app["iosas_precertdocumentssubmitted"] = value.iosas_precertdocumentssubmitted;
             app["iosas_describefamiliaritywithbcscurriculum"] = value.iosas_describefamiliaritywithbcscurriculum;
-            app["iosas_additionalprogramsother "] = value.iosas_additionalprogramsother;
+            app["iosas_additionalprogramsother"] = value.iosas_additionalprogramsother;
 
             return app;
 
