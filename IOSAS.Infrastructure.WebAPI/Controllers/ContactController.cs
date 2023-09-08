@@ -120,26 +120,25 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                     dynamic json = JsonConvert.DeserializeObject(result);
                     string contactId = json.value[0].contactid.ToString();
 
-                    //if (json.value[0].iosas_externaluserid == null || value.iosas_invitecode != null)
-                    //{
-                    //    var updateValue = new JObject
-                    //    {
-                    //        { "iosas_externaluserid", value.iosas_externaluserid},
-                    //        { "iosas_invitecode", null}
-                    //    };
-                    //    var statement = $"contacts({contactId})";
+                    if (json.value[0].iosas_externaluserid == null)
+                    {
+                        var updateValue = new JObject
+                        {
+                            { "iosas_externaluserid", value.iosas_externaluserid}
+                        };
+                        var statement = $"contacts({contactId})";
 
-                    //    HttpResponseMessage response = _d365webapiservice.SendUpdateRequestAsync(statement, updateValue.ToString());
-                    //    if (!response.IsSuccessStatusCode)
-                    //    {
-                    //        return StatusCode((int)response.StatusCode, $"Failed to update contact record: {response.ReasonPhrase}");
-                    //    }
-                    //}
+                        HttpResponseMessage response = _d365webapiservice.SendUpdateRequestAsync(statement, updateValue.ToString());
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            return StatusCode((int)response.StatusCode, $"Failed to update contact record: {response.ReasonPhrase}");
+                        }
+                    }
                     //Log activity
                     Helper.LogUserActvity(success, activity, _d365webapiservice, contactId, value.firstname.ToString(), value.lastname.ToString());
                     string selectStatement = $"contacts({contactId})?$select=fullname,emailaddress1,contactid,firstname,lastname,telephone1,iosas_loginenabled,iosas_externaluserid,iosas_invitecode";
-                    var reponseContactDetails = _d365webapiservice.SendRetrieveRequestAsync(selectStatement, true);
-                    return Ok(reponseContactDetails.Content.ReadAsStringAsync().Result);
+                    var respContactDetails = _d365webapiservice.SendRetrieveRequestAsync(selectStatement, true);
+                    return Ok(respContactDetails.Content.ReadAsStringAsync().Result);
                 }
                 else //if (value.iosas_invitecode == null)  //If invite code is provided contact must already exist.  We don't create without invitation
                 {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
@@ -13,8 +14,10 @@ using IOSAS.Infrastructure.WebAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Xrm.Sdk.Messages;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace IOSAS.Infrastructure.WebAPI.Controllers
 {
@@ -225,10 +228,10 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
 
             if (response.IsSuccessStatusCode)
             {
-
                 //update to trigger flow which sends confirmation email
                 if (submitted)
                 {
+                    EnsureContacts(value,id, userId);
                     var submitData = new JObject
                         {
                             { "iosas_reviewstatus", 100000002}, //Set to in progress
@@ -282,9 +285,15 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 if (m.Success)
                 {
                     newRecordId = m.Value;
+
+                    int submitter = 100000006;
+                    EnsureContactType(userId, submitter);
+                    UpdateContactPhoneNumber(value, userId);
+
                     //update to trigger flow which sends confirmation email
                     if (submitted)
                     {
+                        EnsureContacts(value, newRecordId, userId);
                         var submitData = new JObject
                         {
                             { "iosas_reviewstatus", 100000002}, //Set to in progress
@@ -298,9 +307,6 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                             return StatusCode((int)submitResp.StatusCode, $"Failed to submit EOI: {submitResp.ReasonPhrase}");
                         }
                     }
-
-                    UpdateContactPhoneNumber(value, userId);
-
 
                     //log activity
                     int activity = submitted ? 100000002 : 100000001;
@@ -376,9 +382,9 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 {
                     dynamic json = JsonConvert.DeserializeObject(value: response.Content.ReadAsStringAsync().Result);
                     string contactId = json.value[0].contactid.ToString();
-                    if (json.telephone1 == null)
+                    if (json.value[0].telephone1 == null)
                     {
-                        //Update phone number
+                        //Update existingContactTypes number
                         var phone = new JObject
                         {
                             { "telephone1", value.ioas_schoolauthoritycontactphone}
@@ -388,10 +394,10 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                         HttpResponseMessage updateResponse = _d365webapiservice.SendUpdateRequestAsync(statement, phone.ToString());
                         if (updateResponse.IsSuccessStatusCode)
                         {
-                            return $"Contact {contactId} phone number updated.";
+                            return $"Contact {contactId} existingContactTypes number updated.";
                         }
                         else
-                            return $"Faile to update contact {contactId} phone number.";
+                            return $"Faile to update contact {contactId} existingContactTypes number.";
                     }
                     else
                     {
@@ -432,7 +438,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                             { "iosas_incorporationcertificateissuedate",value.iosas_incorporationcertificateissuedate },
                             { "iosas_certificateofgoodstandingissuedate",value.iosas_certificateofgoodstandingissuedate },
                             { "iosas_notes",value.iosas_notes }
-                        };           
+                        };
 
             eoi["iosas_reviewstatus"] = 100000006; //Draft
             eoi["iosas_schoolauthorityname"] = value.iosas_schoolauthorityname;
@@ -466,37 +472,162 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 eoi["iosas_schoolauthoritycontactemail"] = value.iosas_schoolauthoritycontactemail;
                 eoi["iosas_schoolauthoritycontactphone"] = value.iosas_schoolauthoritycontactphone;
             }
-
-            // if submitter (looged in user) and designated contact are the same set both to the guid, otherwise set DC to null submitter to the guid
-            //if (!string.IsNullOrEmpty(userId)) //authenticated - this is always true as unauthentictaed users are not supported as of Sept 05, 2023
-            //{
             eoi["iosas_Submitter@odata.bind"] = $"/contacts({userId})";
+
+            return eoi;
+        }
+
+        private string EnsureContacts(dynamic value,string id, string userId)
+        {
+            int designatedContactType = 100000003;            
+            int authHeadType = 100000002;
+
+            JObject eoi = new JObject();
+          
             var designatedContact = value._iosas_authortiycontact_value == null ? string.Empty : ((string)value._iosas_authortiycontact_value).Replace("{", "").Replace("}", "");
+            eoi["iosas_existingcontact"] = true;
             if (designatedContact.Equals(userId, StringComparison.InvariantCultureIgnoreCase))
             {
                 eoi["iosas_existingcontact"] = true;
                 eoi["iosas_AuthortiyContact@odata.bind"] = $"/contacts({userId})";
+                EnsureContactType(userId, designatedContactType);
                 if (value.iosas_designatedcontactsameasauthorityhead == true)
                 {
                     eoi["iosas_AuthorityHead@odata.bind"] = $"/contacts({userId})";
                     eoi["iosas_existinghead"] = true;
+                    EnsureContactType(userId, authHeadType);
                 }
             }
             else
             {
-                eoi["iosas_AuthortiyContact@odata.bind"] = null;
-                eoi["iosas_existingcontact"] = false;
+                eoi["iosas_AuthortiyContact@odata.bind"] = EnsureContact(value, designatedContactType); //designated contact
                 if (value.iosas_designatedcontactsameasauthorityhead == true)
                 {
-                    eoi["iosas_AuthorityHead@odata.bind"] = null;
-                    eoi["iosas_existinghead"] = false;
+                    eoi["iosas_AuthorityHead@odata.bind"] = EnsureContact(value, authHeadType); //authority head
+                    eoi["iosas_existinghead"] = true;
                 }
             }
-            //}
 
-            //TODO: In Update/Create have to check contact type and set it if required?
+            var statement = $"iosas_expressionofinterests({id})";
+            HttpResponseMessage updateResponse = _d365webapiservice.SendUpdateRequestAsync(statement, eoi.ToString());
+            if (updateResponse.IsSuccessStatusCode)
+            {
+                return $"Update EOI {id} designated contact and authority head";
+            }
+            else
+            {
+                return $"Failed to update EOI {id} designated contact and authority head";
+            }
+        }
 
-            return eoi;
+        private string EnsureContact(dynamic value, int contactType)
+        {
+            string fetchXml = $@"<fetch version='1.0' output-format='xml-platform' mapping='logical' no-lock='false' distinct='true'>
+                                    <entity name='contact'>
+                                        <attribute name='entityimage_url' />
+                                        <attribute name='fullname' />
+                                        <attribute name='emailaddress1' />
+                                        <attribute name='contactid' />
+                                        <attribute name='firstname' />
+                                        <attribute name='lastname' />
+                                        <attribute name='telephone1' />
+                                        <attribute name='iosas_loginenabled' />
+                                        <attribute name='iosas_externaluserid' />
+                                        <attribute name='iosas_invitecode' />
+                                        <filter type='and'>
+                                            <condition attribute='statecode' operator='eq' value='0' />
+                                            <filter type='or'>
+                                                <condition attribute='emailaddress1' operator='eq' value='{value.iosas_schoolauthoritycontactemail}' />
+                                            </filter>
+                                        </filter>
+                                        <order attribute='fullname' descending='false' />
+                                    </entity>
+                                </fetch>";
+
+            var message = $"contacts?fetchXml=" + WebUtility.UrlEncode(fetchXml);
+            var exists = _d365webapiservice.SendMessageAsync(HttpMethod.Get, message);
+            string result = string.Empty;
+            dynamic json = null;
+            if (exists.IsSuccessStatusCode)
+            {
+                var root = JToken.Parse(exists.Content.ReadAsStringAsync().Result);
+
+                if (root.Last().First().HasValues)
+                {
+                    result = exists.Content.ReadAsStringAsync().Result;
+                    json = JsonConvert.DeserializeObject(result);
+                    string contactId = json.value[0].contactid.ToString();
+                    EnsureContactType(contactId, contactType);
+                    return $"/contacts({contactId})";
+                }
+                else
+                {
+                    string selectStatement = "contacts?$select=fullname,emailaddress1,contactid,firstname,lastname,telephone1,iosas_loginenabled,iosas_externaluserid,iosas_contacttype";
+                    
+                    var ct = new JObject
+                        {
+                            { "lastname",value.iosas_schoolauthoritycontactname },
+                            { "firstname",value.iosas_designatedcontactfirstname },
+                            { "emailaddress1",value.iosas_schoolauthoritycontactemail },
+                            { "telephone1",value.iosas_schoolauthoritycontactphone },
+                            { "iosas_contacttype",$"{contactType}"}
+                        };
+
+                    var createResponse = _d365webapiservice.SendCreateRequestAsyncRtn(selectStatement, ct.ToString());
+                    if (createResponse.IsSuccessStatusCode)
+                    {
+                        //Log activity
+                        result = createResponse.Content.ReadAsStringAsync().Result;
+                        json = JsonConvert.DeserializeObject(result);
+                        string contactId = json.contactid.ToString();
+                        return $"/contacts({contactId})"; 
+                    }
+                    else
+                        return null;
+                }
+            }
+            return null;
+
+        }
+
+        private bool EnsureContactType(string contactId, int contactType)
+        {
+            string selectStatement = $"contacts({contactId})?$select=contactid,firstname,iosas_contacttype";
+            var response = _d365webapiservice.SendRetrieveRequestAsync(selectStatement, true);
+           // int submitter = 100000006;
+            if (response != null)
+            {
+                string result = response.Content.ReadAsStringAsync().Result;
+                dynamic json = JsonConvert.DeserializeObject(result);
+                string existingContactTypes = json.iosas_contacttype.ToString();
+
+                List<int> contactTypeList = new List<int>();
+                if (!string.IsNullOrEmpty(existingContactTypes))
+                {
+                    contactTypeList = existingContactTypes.Split(",").Select(i => Convert.ToInt32(i)).ToList();
+                }
+
+                if (contactTypeList.Any(c => c == contactType))
+                {
+                    return true;
+                }
+                else
+                {
+                    var ct = new JObject
+                        {
+                            { "iosas_contacttype", contactTypeList.Count > 0 ? $"{contactType},{String.Join(",",contactTypeList)}" : $"{contactType}" }
+                        };
+
+                    var statement = $"contacts({contactId})";
+                    HttpResponseMessage updateResponse = _d365webapiservice.SendUpdateRequestAsync(statement, ct.ToString());
+                    if (updateResponse.IsSuccessStatusCode)
+                    {
+                        return true;
+                    }
+                    return false;
+                }
+            }
+            return false;
         }
     }
 }
