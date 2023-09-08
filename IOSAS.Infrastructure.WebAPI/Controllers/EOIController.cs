@@ -510,19 +510,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                     eoi["iosas_existinghead"] = true;
                 }
             }
-            else
-            {
-                eoi["iosas_AuthortiyContact@odata.bind"] = null;
-                eoi["iosas_existingcontact"] = false;
-                if (value.iosas_designatedcontactsameasauthorityhead == true)
-                {
-                    eoi["iosas_AuthorityHead@odata.bind"] = null;
-                    eoi["iosas_existinghead"] = false;
-                }
-            }
-            //}
-
-            //TODO: In Update/Create have to check contact type and set it if required?
+            
 
             var statement = $"iosas_expressionofinterests({id})";
             HttpResponseMessage updateResponse = _d365webapiservice.SendUpdateRequestAsync(statement, eoi.ToString());
