@@ -308,6 +308,9 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                         }
                     }
 
+                    UpdateContactPhoneNumber(value, userId);
+
+                  
                     //log activity
                     int activity = submitted ? 100000002 : 100000001;
                     int success = 100000000;
@@ -438,7 +441,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                             { "iosas_incorporationcertificateissuedate",value.iosas_incorporationcertificateissuedate },
                             { "iosas_certificateofgoodstandingissuedate",value.iosas_certificateofgoodstandingissuedate },
                             { "iosas_notes",value.iosas_notes }
-                        };
+                        };           
 
             eoi["iosas_reviewstatus"] = 100000006; //Draft
             eoi["iosas_schoolauthorityname"] = value.iosas_schoolauthorityname;
@@ -507,6 +510,19 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                     eoi["iosas_existinghead"] = true;
                 }
             }
+            else
+            {
+                eoi["iosas_AuthortiyContact@odata.bind"] = null;
+                eoi["iosas_existingcontact"] = false;
+                if (value.iosas_designatedcontactsameasauthorityhead == true)
+                {
+                    eoi["iosas_AuthorityHead@odata.bind"] = null;
+                    eoi["iosas_existinghead"] = false;
+                }
+            }
+            //}
+
+            //TODO: In Update/Create have to check contact type and set it if required?
 
             var statement = $"iosas_expressionofinterests({id})";
             HttpResponseMessage updateResponse = _d365webapiservice.SendUpdateRequestAsync(statement, eoi.ToString());
