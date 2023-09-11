@@ -37,7 +37,7 @@ NAMESPACE=$(NAMESPACE_TEST)
 APP_CONFIG=$(APP_CONFIG_TEST)
 endif
 
-ifeq ($(ENV_PREFIX), prod)
+ifeq ($(ENV_PREFIX), production)
 NAMESPACE=$(NAMESPACE_PROD)
 APP_CONFIG=$(APP_CONFIG_PROD)
 endif
@@ -187,13 +187,14 @@ else
 endif
 	@git push --force origin refs/tags/test:refs/tags/test
 
-tag-prod:
+tag-production:
 ifdef ticket
-	@git tag -fa prod -m "Deploy $(ticket) to PROD Openshift env"
+	@git tag -fa production -m "Deploy $(ticket) to PROD Openshift env"
 else
 	@echo -e '\nTicket name missing - Example :: make tag-test ticket=HCAP-ABC \n'
 	@echo -e 'Falling Back to using branch name\n'
-	@git tag -fa prod -m "Deploy $(git rev-parse --abbrev-ref HEAD) to PROD env"
+	@git tag -fa production -m "Deploy $(git rev-parse --abbrev-ref HEAD) to PROD env"
 endif
+	@git push --force origin refs/tags/prod:refs/tags/production
 
 
