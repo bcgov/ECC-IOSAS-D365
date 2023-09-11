@@ -132,7 +132,7 @@ parameters:
   - name: MEMORY_REQUEST
     value: "100Mi"
   - name: REPLICAS
-    value: "3"
+    value: "2"
   - name: PORT
     value: "5091"
   - name: IMAGE_STREAM_TAG
