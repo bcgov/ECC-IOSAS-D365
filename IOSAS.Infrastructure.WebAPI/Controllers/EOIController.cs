@@ -307,9 +307,6 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                             return StatusCode((int)submitResp.StatusCode, $"Failed to submit EOI: {submitResp.ReasonPhrase}");
                         }
                     }
-
-                    UpdateContactPhoneNumber(value, userId);
-
                   
                     //log activity
                     int activity = submitted ? 100000002 : 100000001;
@@ -500,6 +497,10 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                     eoi["iosas_existinghead"] = true;
                     EnsureContactType(userId, authHeadType);
                 }
+                else
+                {
+                    //TODO:
+                }
             }
             else
             {
@@ -509,8 +510,13 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                     eoi["iosas_AuthorityHead@odata.bind"] = EnsureContact(value, authHeadType); //authority head
                     eoi["iosas_existinghead"] = true;
                 }
-            }
-            
+                else 
+                {
+                    //TODO: create Auth Head
+                    //eoi["iosas_AuthorityHead@odata.bind"] = EnsureContact(value, authHeadType); //authority head
+                    //eoi["iosas_existinghead"] = false;
+                }
+            }            
 
             var statement = $"iosas_expressionofinterests({id})";
             HttpResponseMessage updateResponse = _d365webapiservice.SendUpdateRequestAsync(statement, eoi.ToString());
