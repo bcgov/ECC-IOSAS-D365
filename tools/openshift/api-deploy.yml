@@ -124,15 +124,15 @@ parameters:
   - name: SERVICE_NAME
     value: api
   - name: CPU_LIMIT
-    value: "0.2"
+    value: "100m"
   - name: MEMORY_LIMIT
-    value: "200M"
+    value: "200Mi"
   - name: CPU_REQUEST
-    value: "0.1"
+    value: "50m"
   - name: MEMORY_REQUEST
-    value: "100M"
+    value: "100Mi"
   - name: REPLICAS
-    value: "1"
+    value: "3"
   - name: PORT
     value: "5091"
   - name: IMAGE_STREAM_TAG
