@@ -288,7 +288,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
 
                     int submitter = 100000006;
                     EnsureContactType(userId, submitter);
-                    UpdateContactPhoneNumber(value, userId);
+                   // UpdateContactPhoneNumber(value, userId);
 
                     //update to trigger flow which sends confirmation email
                     if (submitted)
@@ -307,7 +307,9 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                             return StatusCode((int)submitResp.StatusCode, $"Failed to submit EOI: {submitResp.ReasonPhrase}");
                         }
                     }
-                  
+
+                    UpdateContactPhoneNumber(value, userId);
+
                     //log activity
                     int activity = submitted ? 100000002 : 100000001;
                     int success = 100000000;
