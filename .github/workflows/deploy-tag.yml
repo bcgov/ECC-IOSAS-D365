@@ -7,7 +7,7 @@ on:
   push:
     tags:
       - test
-      - prod
+      - production
 
 env:
   CLUSTER: https://api.silver.devops.gov.bc.ca:6443
