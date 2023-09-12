@@ -124,8 +124,16 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                     {
                         var updateValue = new JObject
                         {
-                            { "iosas_externaluserid", value.iosas_externaluserid}
+                            { "iosas_externaluserid", value.iosas_externaluserid},
+                            { "firstname", value.firstname},
+                            { "lastname", value.lastname}
                         };
+
+                        if (value.telephone1 != null)
+                        {
+                            updateValue["telephone1"] = value.telephone1;
+                        }
+
                         var statement = $"contacts({contactId})";
 
                         HttpResponseMessage response = _d365webapiservice.SendUpdateRequestAsync(statement, updateValue.ToString());

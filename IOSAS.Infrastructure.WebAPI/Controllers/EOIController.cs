@@ -231,7 +231,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 //update to trigger flow which sends confirmation email
                 if (submitted)
                 {
-                    EnsureContacts(value,id, userId);
+                    EnsureContacts(value, id, userId);
                     var submitData = new JObject
                         {
                             { "iosas_reviewstatus", 100000002}, //Set to in progress
@@ -288,7 +288,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
 
                     int submitter = 100000006;
                     EnsureContactType(userId, submitter);
-                   // UpdateContactPhoneNumber(value, userId);
+                    // UpdateContactPhoneNumber(value, userId);
 
                     //update to trigger flow which sends confirmation email
                     if (submitted)
@@ -324,56 +324,33 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                     $"Failed to Create record: {response.ReasonPhrase}");
         }
 
-        private string UpdateContactPhoneNumber(dynamic value, string? userId = null)
+        private string UpdateContactPhoneNumber(dynamic value, string userId)
         {
-            if (value.ioas_schoolauthoritycontactphone == null)
-                return "Nothing to update";
+            if (string.IsNullOrEmpty(userId))
+                return "userId is required.";
 
-            if (value.iosas_schoolauthoritycontactemail == null && string.IsNullOrEmpty(userId))
-                return "iosas_schoolauthoritycontactemail or contactid is required";
+            if (value.iosas_schoolauthoritycontactphone == null)
+                return "iosas_schoolauthoritycontactphone is required.";
 
             string fetchXml = string.Empty;
-            if (!string.IsNullOrEmpty(userId))
-            {
-                fetchXml = $@"<fetch version='1.0' output-format='xml-platform' mapping='logical' distinct='true' no-lock='false'>
-    <entity name='contact'>
-        <attribute name='entityimage_url' />
-        <attribute name='fullname' />
-        <attribute name='emailaddress1' />
-        <attribute name='contactid' />
-        <attribute name='firstname' />
-        <attribute name='lastname' />
-        <attribute name='telephone1' />
-        <attribute name='iosas_loginenabled' />
-        <attribute name='iosas_externaluserid' />
-        <attribute name='iosas_invitecode' />
-        <filter type='and'>
-            <condition attribute='contactid' operator='eq' value='{userId}'/>
-        </filter>
-    </entity>
-</fetch>";
-            }
-            else
-            {
-                fetchXml = $@"<fetch version='1.0' output-format='xml-platform' mapping='logical' distinct='true' no-lock='false'>
-    <entity name='contact'>
-        <attribute name='entityimage_url' />
-        <attribute name='fullname' />
-        <attribute name='emailaddress1' />
-        <attribute name='contactid' />
-        <attribute name='firstname' />
-        <attribute name='lastname' />
-        <attribute name='telephone1' />
-        <attribute name='iosas_loginenabled' />
-        <attribute name='iosas_externaluserid' />
-        <attribute name='iosas_invitecode' />
-        <filter type='and'>
-            <condition attribute='emailaddress1' operator='eq' value='{value.iosas_schoolauthoritycontactemail.ToString()}'/>
-        </filter>
-    </entity>
-</fetch>";
-            }
 
+            fetchXml = $@"<fetch version='1.0' output-format='xml-platform' mapping='logical' distinct='true' no-lock='false'>
+                            <entity name='contact'>
+                                <attribute name='entityimage_url' />
+                                <attribute name='fullname' />
+                                <attribute name='emailaddress1' />
+                                <attribute name='contactid' />
+                                <attribute name='firstname' />
+                                <attribute name='lastname' />
+                                <attribute name='telephone1' />
+                                <attribute name='iosas_loginenabled' />
+                                <attribute name='iosas_externaluserid' />
+                                <attribute name='iosas_invitecode' />
+                                <filter type='and'>
+                                    <condition attribute='contactid' operator='eq' value='{userId}'/>
+                                </filter>
+                            </entity>
+                        </fetch>";
 
             var message = $"contacts?fetchXml=" + WebUtility.UrlEncode(fetchXml);
             var response = _d365webapiservice.SendMessageAsync(HttpMethod.Get, message);
@@ -389,7 +366,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                         //Update existingContactTypes number
                         var phone = new JObject
                         {
-                            { "telephone1", value.ioas_schoolauthoritycontactphone}
+                            { "telephone1", value.iosas_schoolauthoritycontactphone}
                         };
 
                         var statement = $"contacts({contactId})";
@@ -403,7 +380,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                     }
                     else
                     {
-                        return $"Contact {contactId} already exists.";
+                        return $"Contact {contactId} already has a phone number.";
                     }
                 }
                 else
@@ -440,7 +417,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                             { "iosas_incorporationcertificateissuedate",value.iosas_incorporationcertificateissuedate },
                             { "iosas_certificateofgoodstandingissuedate",value.iosas_certificateofgoodstandingissuedate },
                             { "iosas_notes",value.iosas_notes }
-                        };           
+                        };
 
             eoi["iosas_reviewstatus"] = 100000006; //Draft
             eoi["iosas_schoolauthorityname"] = value.iosas_schoolauthorityname;
@@ -479,13 +456,13 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             return eoi;
         }
 
-        private string EnsureContacts(dynamic value,string id, string userId)
+        private string EnsureContacts(dynamic value, string id, string userId)
         {
-            int designatedContactType = 100000003;            
+            int designatedContactType = 100000003;
             int authHeadType = 100000002;
 
             JObject eoi = new JObject();
-          
+
             var designatedContact = value._iosas_authortiycontact_value == null ? string.Empty : ((string)value._iosas_authortiycontact_value).Replace("{", "").Replace("}", "");
             eoi["iosas_existingcontact"] = true;
             if (designatedContact.Equals(userId, StringComparison.InvariantCultureIgnoreCase))
@@ -499,10 +476,6 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                     eoi["iosas_existinghead"] = true;
                     EnsureContactType(userId, authHeadType);
                 }
-                else
-                {
-                    //TODO:
-                }
             }
             else
             {
@@ -511,14 +484,10 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 {
                     eoi["iosas_AuthorityHead@odata.bind"] = EnsureContact(value, authHeadType); //authority head
                     eoi["iosas_existinghead"] = true;
-                }
-                else 
-                {
-                    //TODO: create Auth Head
-                    //eoi["iosas_AuthorityHead@odata.bind"] = EnsureContact(value, authHeadType); //authority head
-                    //eoi["iosas_existinghead"] = false;
-                }
-            }            
+                }              
+            }
+
+            //TODO: Do we need to create contact record for Authority Head as well?
 
             var statement = $"iosas_expressionofinterests({id})";
             HttpResponseMessage updateResponse = _d365webapiservice.SendUpdateRequestAsync(statement, eoi.ToString());
@@ -575,7 +544,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 else
                 {
                     string selectStatement = "contacts?$select=fullname,emailaddress1,contactid,firstname,lastname,telephone1,iosas_loginenabled,iosas_externaluserid,iosas_contacttype";
-                    
+
                     var ct = new JObject
                         {
                             { "lastname",value.iosas_schoolauthoritycontactname },
@@ -592,7 +561,84 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                         result = createResponse.Content.ReadAsStringAsync().Result;
                         json = JsonConvert.DeserializeObject(result);
                         string contactId = json.contactid.ToString();
-                        return $"/contacts({contactId})"; 
+                        return $"/contacts({contactId})";
+                    }
+                    else
+                        return null;
+                }
+            }
+            return null;
+
+        }
+
+
+        /// <summary>
+        /// TODO: do we need this one?
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private string EnsureAuthorityHead(dynamic value)
+        {
+            int authHeadType = 100000002;
+            string fetchXml = $@"<fetch version='1.0' output-format='xml-platform' mapping='logical' no-lock='false' distinct='true'>
+                                    <entity name='contact'>
+                                        <attribute name='entityimage_url' />
+                                        <attribute name='fullname' />
+                                        <attribute name='emailaddress1' />
+                                        <attribute name='contactid' />
+                                        <attribute name='firstname' />
+                                        <attribute name='lastname' />
+                                        <attribute name='telephone1' />
+                                        <attribute name='iosas_loginenabled' />
+                                        <attribute name='iosas_externaluserid' />
+                                        <attribute name='iosas_invitecode' />
+                                        <filter type='and'>
+                                            <condition attribute='statecode' operator='eq' value='0' />
+                                            <filter type='or'>
+                                                <condition attribute='emailaddress1' operator='eq' value='{value.iosas_schoolauthorityheademail}' />
+                                            </filter>
+                                        </filter>
+                                        <order attribute='fullname' descending='false' />
+                                    </entity>
+                                </fetch>";
+
+            var message = $"contacts?fetchXml=" + WebUtility.UrlEncode(fetchXml);
+            var exists = _d365webapiservice.SendMessageAsync(HttpMethod.Get, message);
+            string result = string.Empty;
+            dynamic json = null;
+            if (exists.IsSuccessStatusCode)
+            {
+                var root = JToken.Parse(exists.Content.ReadAsStringAsync().Result);
+
+                if (root.Last().First().HasValues)
+                {
+                    result = exists.Content.ReadAsStringAsync().Result;
+                    json = JsonConvert.DeserializeObject(result);
+                    string contactId = json.value[0].contactid.ToString();
+                    EnsureContactType(contactId, authHeadType);
+                    return $"/contacts({contactId})";
+                }
+                else
+                {
+                    string selectStatement = "contacts?$select=fullname,emailaddress1,contactid,firstname,lastname,telephone1,iosas_loginenabled,iosas_externaluserid,iosas_contacttype";
+
+                    var ct = new JObject
+                        {
+                            { "lastname",value.iosas_schoolauthorityheadname },
+                            { "firstname",value.iosas_authorityheadfirstname },
+                            { "emailaddress1",value.iosas_schoolauthorityheademail },
+                            { "telephone1",value.iosas_schoolauthorityheadphone },
+                            { "iosas_contacttype",$"{authHeadType}"}
+                        };
+
+                    var createResponse = _d365webapiservice.SendCreateRequestAsyncRtn(selectStatement, ct.ToString());
+                    if (createResponse.IsSuccessStatusCode)
+                    {
+                        //Log activity
+                        result = createResponse.Content.ReadAsStringAsync().Result;
+                        json = JsonConvert.DeserializeObject(result);
+                        string contactId = json.contactid.ToString();
+                        return $"/contacts({contactId})";
                     }
                     else
                         return null;
@@ -606,7 +652,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
         {
             string selectStatement = $"contacts({contactId})?$select=contactid,firstname,iosas_contacttype";
             var response = _d365webapiservice.SendRetrieveRequestAsync(selectStatement, true);
-           // int submitter = 100000006;
+            // int submitter = 100000006;
             if (response != null)
             {
                 string result = response.Content.ReadAsStringAsync().Result;
