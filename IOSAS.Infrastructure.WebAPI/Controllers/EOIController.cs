@@ -470,24 +470,30 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                 eoi["iosas_existingcontact"] = true;
                 eoi["iosas_AuthortiyContact@odata.bind"] = $"/contacts({userId})";
                 EnsureContactType(userId, designatedContactType);
+                eoi["iosas_existinghead"] = true;
                 if (value.iosas_designatedcontactsameasauthorityhead == true)
                 {
                     eoi["iosas_AuthorityHead@odata.bind"] = $"/contacts({userId})";
-                    eoi["iosas_existinghead"] = true;
                     EnsureContactType(userId, authHeadType);
+                }
+                else
+                {
+                    eoi["iosas_AuthorityHead@odata.bind"] = EnsureAuthorityHead(value);
                 }
             }
             else
             {
                 eoi["iosas_AuthortiyContact@odata.bind"] = EnsureContact(value, designatedContactType); //designated contact
+                eoi["iosas_existinghead"] = true;
                 if (value.iosas_designatedcontactsameasauthorityhead == true)
                 {
-                    eoi["iosas_AuthorityHead@odata.bind"] = EnsureContact(value, authHeadType); //authority head
-                    eoi["iosas_existinghead"] = true;
-                }              
+                    eoi["iosas_AuthorityHead@odata.bind"] = EnsureContact(value, authHeadType); //authority head                   
+                }
+                else
+                {
+                    eoi["iosas_AuthorityHead@odata.bind"] = EnsureAuthorityHead(value);
+                }
             }
-
-            //TODO: Do we need to create contact record for Authority Head as well?
 
             var statement = $"iosas_expressionofinterests({id})";
             HttpResponseMessage updateResponse = _d365webapiservice.SendUpdateRequestAsync(statement, eoi.ToString());
