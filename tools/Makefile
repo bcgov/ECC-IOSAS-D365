@@ -26,20 +26,32 @@ export NAMESPACE_PROD := $(or $(NAMESPACE_PROD), d1273d-dev)
 
 export REPO_NAME:=ECC-IOSAS-D365
 
+
+MAX_CPU=100m
+MIN_CPU=50m
+MAX_MEMORY=128Mi
+MIN_MEMORY=128Mi
+
 # Seeting up Name space as per env prefix
 ifeq ($(ENV_PREFIX), dev)
 NAMESPACE=$(NAMESPACE_DEV)
 APP_CONFIG=$(APP_CONFIG_DEV)
+MIN_REPLICA=2
+MAX_REPLICA=3
 endif
 
 ifeq ($(ENV_PREFIX), test)
 NAMESPACE=$(NAMESPACE_TEST)
 APP_CONFIG=$(APP_CONFIG_TEST)
+MIN_REPLICA=3
+MAX_REPLICA=3
 endif
 
 ifeq ($(ENV_PREFIX), production)
 NAMESPACE=$(NAMESPACE_PROD)
 APP_CONFIG=$(APP_CONFIG_PROD)
+MIN_REPLICA=3
+MAX_REPLICA=3
 endif
 
 
@@ -164,7 +176,12 @@ update-dc-api:
 		-p PREFIX=$(ENV_PREFIX) \
 		-p BUILD_NAMESPACE=$(BUILD_NAMESPACE) \
 		-p IMAGE_STREAM_TAG="$(API):$(ENV_PREFIX)" \
-		-p BUILD_ID=$(BUILD_TAG) | oc -n $(NAMESPACE) apply -f -
+		-p BUILD_ID=$(BUILD_TAG) \
+		-p CPU_LIMIT=$(MAX_CPU) \
+		-p CPU_REQUEST=$(MIN_CPU) \
+		-p MEMORY_REQUEST=$(MIN_MEMORY) \
+		-p MEMORY_LIMIT=$(MAX_MEMORY) \
+		-p REPLICAS=$(MIN_REPLICA) | oc -n $(NAMESPACE) apply -f -
 
 deploy-api: update-dc-api
 	@oc rollout cancel dc/$(API) 2> /dev/null || true && echo "No rollout in progress"
