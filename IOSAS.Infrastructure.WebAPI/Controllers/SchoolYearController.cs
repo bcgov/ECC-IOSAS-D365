@@ -43,6 +43,8 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='edu_enddate'/>
                                     <attribute name='edu_yearid'/>
                                     <attribute name='iosas_label'/>
+                                    <attribute name='iosas_interviewdeadline'/>
+                                    <attribute name='iosas_precertificationsubmissiondeadline'/>
                                     <attribute name='iosas_currentapplicationsyear'/>
                                     <filter type='and'>
                                         <condition attribute='edu_yearid' operator='eq' value='{id}'/>
