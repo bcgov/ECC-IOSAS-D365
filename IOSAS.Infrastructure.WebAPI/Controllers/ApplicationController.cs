@@ -265,10 +265,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='createdby' />
                                     <attribute name='modifiedby' />
                                     <attribute name='iosas_portalapplicationstep' />
-                                    <filter type='and'>
-                                       <condition attribute='statuscode' operator='ne' value='100000012'/>
-                                       <condition attribute='statuscode' operator='ne' value='100000011'/>
-                                       <condition attribute='statuscode' operator='ne' value='100000008'/>
+                                    <filter type='and'>                                    
                                        <condition attribute='statecode' operator='eq' value='0'/>
                                        <filter type='or'>
                                            <condition attribute='iosas_schoolauthorityhead' operator='eq' value='{userId}' />
