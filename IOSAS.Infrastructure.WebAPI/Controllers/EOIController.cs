@@ -91,6 +91,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                                     <attribute name='iosas_notes' /> 
                                     <attribute name='iosas_authortiycontact' /> 
                                     <attribute name='iosas_submitter' /> 
+                                    <attribute name='iosas_submissionmethod' />
                                     <filter type='and'>
                                         <condition attribute='iosas_expressionofinterestid' operator='eq' value='{id}' />
                                         <filter type='or'>
