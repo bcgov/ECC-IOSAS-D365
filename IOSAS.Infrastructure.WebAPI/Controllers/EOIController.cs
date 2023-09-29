@@ -128,35 +128,58 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
         public ActionResult<string> GetAllByUser(string userId)
         {
 
+            //FILTER OUT EOIs that were manually submitted and are New or Draft status
+
             if (string.IsNullOrEmpty(userId))
                 return BadRequest("Invalid Request - userId is userId");
 
-            var fetchXml = $@"<fetch version='1.0' output-format='xml-platform' mapping='logical' no-lock='false' distinct='true'>
-                                <entity name='iosas_expressionofinterest'>
-                                    <attribute name='iosas_name' />   
-                                    <attribute name='iosas_eoinumber' />  
-                                    <attribute name='iosas_expressionofinterestid' />  
-                                    <attribute name='iosas_proposedschoolname' />  
-                                    <attribute name='iosas_reviewstatus' />  
-                                    <attribute name='iosas_groupclassification' />  
-                                    <attribute name='iosas_edu_year' />  
-                                    <attribute name='createdon' />
-                                    <attribute name='modifiedon' />
-                                    <attribute name='statecode' />
-                                    <attribute name='statuscode' />
-                                    <filter type='and'>
-                                       <condition attribute='statecode' operator='eq' value='0'/>
-                                       <condition attribute='iosas_reviewstatus' operator='ne' value='100000005' />
-                                       <condition attribute='iosas_reviewstatus' operator='ne' value='100000007' />
-                                       <condition attribute='iosas_reviewstatus' operator='ne' value='100000004' />
-                                       <filter type='or'>
-                                           <condition attribute='iosas_authorityhead' operator='eq' value='{userId}' />
-                                           <condition attribute='iosas_authortiycontact' operator='eq' value='{userId}' />
-                                           <condition attribute='iosas_submitter' operator='eq' value='{userId}' />
-                                        </filter>
-                                    </filter>
-                                </entity>
-                            </fetch>";
+            var fetchXml = $@"<fetch version='1.0' mapping='logical' no-lock='false' distinct='true'>
+    <entity name='iosas_expressionofinterest'>
+        <attribute name='iosas_name' />   
+        <attribute name='iosas_eoinumber' />  
+        <attribute name='iosas_expressionofinterestid' />  
+        <attribute name='iosas_proposedschoolname' />  
+        <attribute name='iosas_reviewstatus' />  
+        <attribute name='iosas_groupclassification' />  
+        <attribute name='iosas_edu_year' />  
+        <attribute name='createdon' />
+        <attribute name='modifiedon' />
+        <attribute name='statecode' />
+        <attribute name='statuscode' />
+        <filter type='and'>
+            <filter type='or'>
+                <condition attribute='iosas_authorityhead' operator='eq' value='{userId}' />
+                <condition attribute='iosas_authortiycontact' operator='eq' value='{userId}' />
+                <condition attribute='iosas_submitter' operator='eq' value='{userId}' />
+            </filter>
+            <filter type='or'>
+                <filter type='and'>
+                    <condition attribute='iosas_submissionmethod' operator='eq' value='100000000' />
+                    <filter type='or'>
+                        <condition attribute='iosas_reviewstatus' operator='eq' value='100000000' />
+                        <condition attribute='iosas_reviewstatus' operator='eq' value='100000001' />
+                        <condition attribute='iosas_reviewstatus' operator='eq' value='100000002' />
+                        <condition attribute='iosas_reviewstatus' operator='eq' value='100000003' />
+                        <condition attribute='iosas_reviewstatus' operator='eq' value='100000004' />
+                        <condition attribute='iosas_reviewstatus' operator='eq' value='100000005' />                        
+                    </filter>
+                </filter>
+                <filter type='and'>
+                    <condition attribute='iosas_submissionmethod' operator='eq' value='100000001' />
+                    <filter type='or'>
+                        <condition attribute='iosas_reviewstatus' operator='eq' value='100000000' />                      
+                        <condition attribute='iosas_reviewstatus' operator='eq' value='100000001' />
+                        <condition attribute='iosas_reviewstatus' operator='eq' value='100000002' />
+                        <condition attribute='iosas_reviewstatus' operator='eq' value='100000003' />
+                        <condition attribute='iosas_reviewstatus' operator='eq' value='100000004' />
+                        <condition attribute='iosas_reviewstatus' operator='eq' value='100000005' />
+                        <condition attribute='iosas_reviewstatus' operator='eq' value='100000006' />
+                    </filter>
+                </filter>
+            </filter>
+        </filter>
+    </entity>
+</fetch>";
 
             var message = $"iosas_expressionofinterests?fetchXml=" + WebUtility.UrlEncode(fetchXml);
 
@@ -273,6 +296,7 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
             //https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/create-entity-web-api
 
             var eoi = PrepareEOI(value, submitted, userId);
+            eoi["iosas_submissionmethod"] = 100000001;
 
             var response = _d365webapiservice.SendCreateRequestAsync(statement, eoi.ToString());
 
@@ -414,7 +438,6 @@ namespace IOSAS.Infrastructure.WebAPI.Controllers
                             { "iosas_edu_Year@odata.bind", $"/edu_years({value._iosas_edu_year_value})" },
                             { "iosas_designatedcontactsameasauthorityhead",value.iosas_designatedcontactsameasauthorityhead },
                             { "iosas_existingauthority",value.iosas_existingauthority },
-                            { "iosas_submissionmethod",100000001 },
                             { "iosas_incorporationcertificateissuedate",value.iosas_incorporationcertificateissuedate },
                             { "iosas_certificateofgoodstandingissuedate",value.iosas_certificateofgoodstandingissuedate },
                             { "iosas_notes",value.iosas_notes }
