@@ -84,6 +84,7 @@ define rollout_and_wait
 @oc -n $(NAMESPACE) rollout status $1
 endef
 
+current_datetime := $(shell date '+%Y%m%d%H%M%S')
 
 init-oc: | print-status init-project
 oc-build-api: | print-status build-api
@@ -162,6 +163,9 @@ build-api:
 		-p SOURCE_CONTEXT_DIR=/ -p NAME=$(API) | oc -n $(BUILD_NAMESPACE) apply -f -
 	@oc -n $(BUILD_NAMESPACE) start-build bc/$(API) --wait --follow=true
 	@oc -n $(BUILD_NAMESPACE) tag $(API):$(BUILD_TAG) $(API):latest
+	@oc -n $(BUILD_NAMESPACE) tag $(API):$(BUILD_TAG) $(API):$(current_datetime)
+	@git tag -fa $(ENV_PREFIX)-api-$(current_datetime) -m "$(ENV_PREFIX)-api: Tagging the api build"
+	@git push origin --tags
 
 
 
@@ -194,6 +198,10 @@ promote-api:
 
 
 # Tagging env
+tag-commit:
+	@echo "Tagging commit with date-time: $(current_datetime)"
+	@git tag -fa $(ENV_PREFIX)-$(current_datetime) -m "$(ENV_PREFIX): Tagging the deployment"
+	@git push origin --tags
 tag-test:
 ifdef ticket
 	@git tag -fa test -m "Deploy $(ticket) to TEST Openshift env"
@@ -212,6 +220,6 @@ else
 	@echo -e 'Falling Back to using branch name\n'
 	@git tag -fa production -m "Deploy $(git rev-parse --abbrev-ref HEAD) to PROD env"
 endif
-	@git push --force origin refs/tags/prod:refs/tags/production
+	@git push --force origin refs/tags/production:refs/tags/production
 
 

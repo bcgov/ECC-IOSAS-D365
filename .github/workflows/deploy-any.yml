@@ -43,3 +43,4 @@ jobs:
           make init-api
           make promote-api
           make deploy-api
+          make tag-commit
