@@ -46,12 +46,8 @@ jobs:
           make promote-api
           make deploy-api
       - name: Tag Deployment
-        uses: actions/github-script@v5
-        with:
-          script: |
-            github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'refs/tags/${{ env.ENV_PREFIX}}-${{ env.DATE_TIME }}',
-              sha: context.sha
-            })
+        run: |
+          git config user.name ${{ github.actor }}
+          git config user.email "iosas-action@gov.bc.ca"
+          git tag -a ${{ env.ENV_PREFIX}}-${{ env.DATE_TIME }} -m "D365: The deploy date time tag"
+          git push origin ${{ env.ENV_PREFIX}}-${{ env.DATE_TIME }}
