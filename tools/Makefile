@@ -164,10 +164,6 @@ build-api:
 	@oc -n $(BUILD_NAMESPACE) start-build bc/$(API) --wait --follow=true
 	@oc -n $(BUILD_NAMESPACE) tag $(API):$(BUILD_TAG) $(API):latest
 	@oc -n $(BUILD_NAMESPACE) tag $(API):$(BUILD_TAG) $(API):$(current_datetime)
-	@git tag -fa $(ENV_PREFIX)-api-$(current_datetime) -m "$(ENV_PREFIX)-api: Tagging the api build"
-	@git push origin --tags
-
-
 
 
 

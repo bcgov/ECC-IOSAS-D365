@@ -32,6 +32,8 @@ jobs:
     concurrency: ci-deploy-api-dev
     timeout-minutes: 20
     steps:
+      - name: Set Date time
+        run: echo "DATE_TIME=$(date ''+%Y%m%d%H%M%S'')" >> $GITHUB_ENV
       - name: Checkout
         uses: actions/checkout@v2
       - name: Deploy changes
@@ -43,4 +45,13 @@ jobs:
           make init-api
           make promote-api
           make deploy-api
-          make tag-commit
+      - name: Tag Deployment
+        uses: actions/github-script@v5
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/${{ env.ENV_PREFIX}}-${{ env.DATE_TIME }}',
+              sha: context.sha
+            })
