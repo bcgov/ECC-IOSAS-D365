@@ -40,7 +40,6 @@ jobs:
           make init-api
           make promote-api
           make deploy-api
-          make tag-commit
       - name: Tag Deployment
         uses: actions/github-script@v5
         with:
