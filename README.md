@@ -32,11 +32,11 @@ To set up the middleware application for local development, please follow the st
     git clone https://github.com/bcgov/ECC-IOSAS-INSTITUTE-API
     ```
 
-2. **Create `appsettings.json`**
+1. **Create `appsettings.json`**
 
     Navigate to the `{root}/SchoolInformationIntegration` directory within the cloned repository. Here, create a new file named `appsettings.json`.
 
-3. **Configure Application Settings**
+1. **Configure Application Settings**
 
     Access the GitHub repository's web interface and navigate to the following location to find the development environment configuration:
 
@@ -46,15 +46,15 @@ To set up the middleware application for local development, please follow the st
 
     Look for a variable named `APP_CONFIG_DEV`. Copy the content of this variable and paste it into the `appsettings.json` file you created in the previous step.
 
-4. **Open the Solution in Visual Studio**
+1. **Open the Solution in Visual Studio**
 
     Navigate to the `{repo_root}/IOSAS.sln` file. Double-click on this file to open the solution in Microsoft Visual Studio.
 
-5. **Run the Application**
+1. **Run the Application**
 
     Inside Visual Studio, initiate the application by running it. Visual Studio automates the build process and launches the application.
 
-6. **Access Swagger UI**
+1. **Access Swagger UI**
 
     Once the application is running, Visual Studio will automatically open the default web browser and navigate to the Swagger API documentation page at:
 
@@ -76,9 +76,38 @@ This section outlines the steps for building and deploying the .NET Web API, whi
 
 ### Build the API Docker Image
 
+1. **How to setup `appsettings.json`**
+
+    Sample `appsetings.json`:
+
+    ```json
+    {
+        "D365AppSettings": {
+        "BaseUrl": "https://iosas{ENV}.crm3.dynamics.com",
+        "ResourceUrl": "TBD",
+        "WebApiUrl": "https://iosas{ENV}.crm3.dynamics.com/api/data/v9.2/",
+        "TenantId": "<Powerapp-TenantId>",
+        "ClientId": "<client-id>",
+        "ClientSecret": "client-secret",
+        "RedirectUrl": "TBD",
+        "APIVersion": "v9.2",
+        "SearchVersion": "TBD",
+        "AllowedFileUplaodTypes": "jpg,jpeg,pdf,png,doc,docx,heic,xls,xlsx,txt"
+      }
+    }
+    ```
+
+    Please get appropiate values for target env from MS Power Portal admistrator and saved as github variables in jsonstring non pretty formatting
+
+    ```md
+    Settings > Security > Secrets and variables > Actions > Variables > APP_CONFIG_{ENV_NAME}
+    ```
+
+    Note: Currently all github variables related to each OpenShift enviorments are configured with proper values (APP_CONFIG_DEV, APP_CONFIG_TEST, APP_CONFIG_PROD)
+
 1. **Set Up Environment Variables**: Ensure that your `.env` file located in the project root directory contains all the necessary environment variables. This file is automatically included and exported by the `Makefile`.
 
-2. **Build the API Container Image**: Execute the following command to initiate the build process for the API container image. This step uses the `build-api` target in the `Makefile` and relies on the `openshift/docker-build.yml` template for configurations.
+1. **Build the API Container Image**: Execute the following command to initiate the build process for the API container image. This step uses the `build-api` target in the `Makefile` and relies on the `openshift/docker-build.yml` template for configurations.
 
     ```bash
     make oc-build-api
