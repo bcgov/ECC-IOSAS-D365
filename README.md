@@ -1,1 +1,206 @@
-# ECC-IOSAS-D365
+# ECC IOSAS/ISFS Middleware for Dynamics 365 Data Integration
+
+## Introduction
+
+Welcome to the IOSAS D365 Transformer repository.
+
+This application serves as an intermediate layer for communication between the IOSAS web portal and the D365 web REST API. It is a Dot Net Web API application designed primarily to transform requests from the IOSAS web portal so they can be suitably handled by the D365 web REST API.
+
+One of the fundamental features of this application is its secure connectivity with the MS D365 environment, ensuring the safety and integrity of all transformed data.
+
+Follow along for getting started guidelines, configuration details, deployment instructions and more.
+
+### Deployment
+
+The .NET API layer of our application is deployed on OpenShift using Deployment Configurations. This deployment strategy ensures high availability, scalability, and security for the application, enabling it to handle data integration tasks efficiently and reliably.
+
+## Local Development Setup
+
+To set up the middleware application for local development, please follow the steps outlined below. These steps will guide you through the process of setting up the development environment, cloning the repository, and running the application on your local machine.
+
+### Prerequisites of local deployment
+
+- Microsoft Visual Studio 17.6 or above installed on your local machine.
+
+### Getting Started
+
+1. **Clone the Repository**
+
+    Begin by cloning the repository to your local machine. Open your terminal or command prompt and run the following command:
+
+    ```bash
+    git clone https://github.com/bcgov/ECC-IOSAS-INSTITUTE-API
+    ```
+
+2. **Create `appsettings.json`**
+
+    Navigate to the `{root}/SchoolInformationIntegration` directory within the cloned repository. Here, create a new file named `appsettings.json`.
+
+3. **Configure Application Settings**
+
+    Access the GitHub repository's web interface and navigate to the following location to find the development environment configuration:
+
+    ```md
+    Settings > Security > Secrets and variables > Actions > Variables
+    ```
+
+    Look for a variable named `APP_CONFIG_DEV`. Copy the content of this variable and paste it into the `appsettings.json` file you created in the previous step.
+
+4. **Open the Solution in Visual Studio**
+
+    Navigate to the `{repo_root}/IOSAS.sln` file. Double-click on this file to open the solution in Microsoft Visual Studio.
+
+5. **Run the Application**
+
+    Inside Visual Studio, initiate the application by running it. Visual Studio automates the build process and launches the application.
+
+6. **Access Swagger UI**
+
+    Once the application is running, Visual Studio will automatically open the default web browser and navigate to the Swagger API documentation page at:
+
+    ```curl
+    https://localhost:7251/swagger/index.html
+    ```
+
+    This page provides an interactive interface to test and explore the API endpoints offered by the middleware application.
+
+## OpenShift Build and Deployment
+
+This section outlines the steps for building and deploying the .NET Web API, which serves as a middleware for MS Dynamics 365, using OpenShift. The process utilizes a `Makefile` to automate tasks such as building the Docker image, creating certificates, and deploying the application to OpenShift. 
+
+### Prerequisites of OpenShift Deployment
+
+- Access to an OpenShift cluster with appropriate permissions.
+- The `oc` CLI tool installed and configured to communicate with your OpenShift cluster.
+- A clone of the repository containing the `Makefile`.
+
+### Build the API Docker Image
+
+1. **Set Up Environment Variables**: Ensure that your `.env` file located in the project root directory contains all the necessary environment variables. This file is automatically included and exported by the `Makefile`.
+
+2. **Build the API Container Image**: Execute the following command to initiate the build process for the API container image. This step uses the `build-api` target in the `Makefile` and relies on the `openshift/docker-build.yml` template for configurations.
+
+    ```bash
+    make oc-build-api
+    ```
+
+    This command processes the Docker build template with the current git commit information and other environment variables, then starts a build in the OpenShift namespace defined by `BUILD_NAMESPACE`.
+
+### Deploy the API
+
+1. **Initialize API Configuration**: Before deploying, ensure that the API's configuration is properly set up in a configMap within OpenShift. This is done using the `init-api` target, which reads the `APP_CONFIG` environment variable and creates an `appsettings.json` within the API container.
+
+    ```bash
+    make init-api
+    ```
+
+2. **Deploy the API Container**: Use the following command to deploy the API container using the deployment configuration. This step also handles the creation of a service certificate for the .NET API server.
+
+    ```bash
+    make oc-deploy-api
+    ```
+
+    The deployment uses the OpenShift `api-deploy.yml` template file and updates the deployment configuration with the latest image built in the previous step.
+
+### Accessing the Swagger UI
+
+After successful deployment, the API will be accessible within the OpenShift cluster. You can create a port-forwarding tunnel to access the Swagger UI locally using the `d365-api-tunnel` target:
+
+```bash
+make d365-api-tunnel
+```
+
+This command sets up a port-forwarding tunnel to the service, allowing you to access the Swagger UI at `https://localhost:7251/swagger/index.html` (or a different port if specified).
+
+### Clean Up and Rollout
+
+To manage deployments, use the `oc` commands for rolling updates, scaling, or rollback as needed. For custom rollout and wait strategies, refer to the `rollout_and_wait` function defined in the `Makefile`.
+
+### Additional Notes
+
+- The `Makefile` includes targets for certificate creation (`api-create-certificate`), API configuration initialization (`init-api`), and deployment configuration updates (`update-dc-api`).
+- Environment-specific configurations are managed using conditional statements in the `Makefile`, allowing for flexible deployments across development, test, and production environments.
+
+By following these steps, you can build and deploy the .NET Web API middleware for MS Dynamics 365 on OpenShift, leveraging the automation provided by the `Makefile`.
+
+## CI/CD Pipeline
+
+This section outlines the Continuous Integration and Continuous Deployment (CI/CD) process for a web application, managed through GitHub Actions and deployed on OpenShift. The CI/CD pipeline is designed to automate the build and deployment process, ensuring that every change is seamlessly integrated and deployed to the development environment, with options for manual deployments and promotions.
+
+### Overview of CI/CD
+
+The CI/CD pipeline utilizes GitHub Actions to automate the building and deploying of the application. It is configured to respond to push events to specific branches and manual triggers, with each OpenShift build tagged with the Git commit SHA for traceability.
+
+#### General Workflow Diagram
+
+![CI/CD Workflow Diagram](./docs/drawings/IOSAS-CI_CD-pipeline.jpeg)
+
+#### Workflows
+
+##### Automatic Build and Deployment to Development Environment
+
+- **Development Workflow**: The `dev` workflow is triggered on a push event to the `main-dev` branch. It automatically builds and deploys the entire application to the development environment. This process is defined under `.github/workflows/dev-api.yml`.
+
+###### Manual Build and Deployment
+
+**API Deployment**: To manually build and deploy the API component in the development environment, the `dev-api` workflow is used. This can be triggered manually through GitHub Actions and is defined in `.github/workflows/dev-api.yml`.
+
+
+###### Promotion to Target Environment
+
+- **Promotion Workflow**: The `dev-any` workflow facilitates the promotion of a build to any target environment. It can use either a specific build tag (commit SHA) if the Git branch head points to the same commit SHA, or it can use the latest tag if the Git branch head points to a SHA whose build tag is not available. This workflow is defined under `.github/workflows/dev-any.yml` and must be triggered manually.
+
+#### Tagging Strategy
+
+Each build deployed to OpenShift is tagged with the Git commit SHA. This tagging strategy ensures traceability and allows for precise promotions between environments.
+
+#### Triggering Manual Workflows
+
+To trigger manual deployments or promotions:
+
+1. Go to the repository on GitHub.
+2. Navigate to the **Actions** tab.
+3. Select the desired workflow (e.g., `dev-api`, `dev-any`).
+4. Click the **Run workflow** dropdown.
+5. Choose the branch where the workflow is defined.
+6. Click **Run workflow** to start the process.
+
+#### Note for CI/CD
+
+This CI/CD pipeline automates the process of integrating, building, and deploying applications to various environments. It leverages GitHub Actions for both automatic and manual workflows, ensuring that the application remain-devs up-to-date and stable across all development stages.
+
+## API Documenation
+
+### Access dynamic swagger documenation page
+
+After running application locally we can access live swgger docuemenation on
+
+```curl
+ https://localhost:7251/swagger/index.html
+```
+
+We can access the api swagger deployed in openshift after [port forwarding](#accessing-the-swagger-ui)
+
+
+## Getting Help or Reporting an Issue
+
+To report bugs/issues/features requests, please file an [issue](https://github.com/bcgov/ECC-IOSAS-INSTITUTE-API/issues).
+
+## License
+
+```md
+
+        Copyright 2020 Province of British Columbia
+
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+```
