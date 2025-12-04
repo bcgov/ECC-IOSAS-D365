@@ -184,8 +184,8 @@ update-dc-api:
 		-p REPLICAS=$(MIN_REPLICA) | oc -n $(NAMESPACE) apply -f -
 
 deploy-api: update-dc-api
-	@oc rollout cancel dc/$(API) 2> /dev/null || true && echo "No rollout in progress"
-	@oc -n $(NAMESPACE) rollout status dc/$(API) --watch=true
+	@oc rollout cancel deployment/$(API) 2> /dev/null || true && echo "No rollout in progress"
+	@oc -n $(NAMESPACE) rollout status deployment/$(API) --watch=true
 
 promote-api:
 	test -n "$(BUILD_NAMESPACE)"
