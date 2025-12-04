@@ -188,7 +188,7 @@ deploy-api: update-dc-api
 	@oc -n $(NAMESPACE) rollout status deployment/$(API) --watch=true
 
 promote-api:
-	test -n "$(BUILD_NAMESPACE)
+	test -n "$(BUILD_NAMESPACE)"
 	echo "+\n++ API: Deploying latest tag $(BUILD_TAG) API with ENV $(ENV_PREFIX) $\n+"
 	sh config/promote-app.sh $(BUILD_NAMESPACE) $(API) $(BUILD_TAG) $(ENV_PREFIX)
 
