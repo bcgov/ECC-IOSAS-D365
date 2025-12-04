@@ -21,12 +21,10 @@ objects:
         rollingUpdate:
           maxSurge: 25%
           maxUnavailable: 25%
-      triggers:
-        - type: ConfigChange
       template:
         metadata:
           labels:
-            apps: ${NAME}
+            app: ${NAME}
         spec:
           containers:
             - image: ${IMAGE_REGISTRY}/${BUILD_NAMESPACE}/${IMAGE_STREAM_TAG}

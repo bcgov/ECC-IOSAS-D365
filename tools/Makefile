@@ -184,11 +184,11 @@ update-dc-api:
 		-p REPLICAS=$(MIN_REPLICA) | oc -n $(NAMESPACE) apply -f -
 
 deploy-api: update-dc-api
-	@oc rollout cancel deployment/$(API) 2> /dev/null || true && echo "No rollout in progress"
+	@oc -n $(NAMESPACE) rollout restart deployment/$(API)
 	@oc -n $(NAMESPACE) rollout status deployment/$(API) --watch=true
 
 promote-api:
-	test -n "$(BUILD_NAMESPACE)"
+	test -n "$(BUILD_NAMESPACE)
 	echo "+\n++ API: Deploying latest tag $(BUILD_TAG) API with ENV $(ENV_PREFIX) $\n+"
 	sh config/promote-app.sh $(BUILD_NAMESPACE) $(API) $(BUILD_TAG) $(ENV_PREFIX)
 
