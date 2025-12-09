@@ -1,5 +1,5 @@
 # Build and Deploy to dev env.
-# Trigger with tag dev
+# Trigger with dev tag
 # Connected with repo environment 'dev'
 name: OpenShift Build and Deploy to api (Dev)
 
