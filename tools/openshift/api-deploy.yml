@@ -102,7 +102,7 @@ objects:
           protocol: TCP 
           targetPort: 443
       selector:
-        apps: ${NAME}
+        app: ${NAME}
 parameters:
   - name: BUILD_ID
     value: "0"
